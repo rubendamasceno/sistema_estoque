@@ -9,7 +9,7 @@ load_dotenv()
 # Carrega as variáveis de ambiente do seu codigo
 
 SECRET_KEY= os.getenv("SECRET_KEY")
-# Combinado com a senha do usuario cria uma terceira chave, que seria a hash daquele usuario
+# Chave secreta utilizada para assinar e validar os tokens JWT
 
 ALGORITHM = os.getenv("ALGORITHM")
 # Algorítmo usado para assinar o JWT
