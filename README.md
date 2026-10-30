@@ -189,7 +189,7 @@ Os produtos precisam existir no banco e possuir estoque suficiente.
 1. Cadastre um usuário usando `POST /usuarios/`.
 2. Faça login pelo botão **Authorize**, informando o e-mail no campo `username` e a senha.
 3. Utilize o token de acesso para testar os endpoints protegidos.
-4. Para testar as operações administrativas, utilize um usuário com a permissão `admin`.
+4. Para testar as operações administrativas, utilize um usuário com a permissão `admin`. Cadastre o usuário com `"admin": true` no corpo de `POST /usuarios/`
 
 ## Observações e limitações
 
@@ -197,7 +197,7 @@ Este projeto foi desenvolvido com foco no aprendizado e na execução em ambient
 
 - **Cadastro de administradores:** para facilitar os testes em ambiente local, o endpoint público de cadastro permite definir o campo `admin: true`. Essa decisão foi intencional e limitada ao contexto educacional do projeto. Em um ambiente de produção, a atribuição de permissões administrativas exigiria um mecanismo de autorização adequado, impedindo que usuários comuns elevassem seus próprios privilégios.
 - **Banco de dados:** o projeto utiliza SQLite para persistência local.
-- **Testes:** as funcionalidades foram verificadas manualmente pelo Swagger; ainda não existe uma suíte de testes automatizados.
+- **Testes:** suíte de testes automatizados (pytest) está em desenvolvimento. No momento cobre a criação de pedidos; as demais funcionalidades foram verificadas manualmente pelo Swagger.
 - **Deploy:** a API ainda não está hospedada em um servidor público.
 
 ## Autor

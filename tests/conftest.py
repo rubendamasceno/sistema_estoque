@@ -10,7 +10,7 @@ import models
 def session_teste():
     engine = create_engine(
         "sqlite://",
-        connect_args={"check_same_thread": False}, # Desativa a vrificação de trheads
+        connect_args={"check_same_thread": False}, # Desativa a verificação de trheads
         poolclass=StaticPool # Reutiliza a mesma conexão do banco de teste
     )
 

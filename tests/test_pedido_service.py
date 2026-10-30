@@ -47,7 +47,6 @@ def test_criar_pedido(session_teste):
 
 
 def test_estoque_insuficiente(session_teste):
-
     usuario = Usuario(
         nome="teste",
         email="teste@gmail.com",
@@ -81,3 +80,82 @@ def test_estoque_insuficiente(session_teste):
 
     assert pedido is False
     assert produto.estoque == 5
+
+
+def test_produto_inexistente(session_teste):
+    usuario = Usuario(
+        nome="teste",
+        email="teste@gmail.com",
+        senha="teste12345678"
+    )
+
+    session_teste.add(usuario)
+    session_teste.commit()
+
+    pedido_schema = PedidoCreate(
+            itens = [
+                ItemPedidoCreate(
+                    id_produto=99,
+                    quantidade=1
+                )
+            ]
+        )
+    
+    pedido = criar_pedido(
+        pedido_schema,
+        usuario,
+        session_teste)
+
+    assert pedido is None
+    assert session_teste.query(Pedido).count() == 0
+
+
+def test_pedido_varios_produtos(session_teste):
+    usuario = Usuario(
+        nome="teste",
+        email="teste@gmail.com",
+        senha="teste12345678"
+    )
+
+    teclado = Produto(
+        nome="Teclado",
+        preco=220.00,
+        estoque=10
+    )
+
+    mouse = Produto(
+        nome="Mouse",
+        preco=170.00,
+        estoque=8
+    )
+
+    session_teste.add_all([usuario, teclado, mouse])
+    session_teste.commit()
+
+    pedido_schema = PedidoCreate(
+        itens = [
+            ItemPedidoCreate(
+                id_produto=teclado.id,
+                quantidade=2
+            ),
+            ItemPedidoCreate(
+                id_produto=mouse.id,
+                quantidade=3
+            )
+
+        ]
+    )
+
+    pedido = criar_pedido(
+        pedido_schema,
+        usuario,
+        session_teste)
+
+    assert pedido is not None
+    assert teclado.estoque == 8
+    assert mouse.estoque == 5
+    assert len(pedido.itens) == 2
+
+
+
+    
