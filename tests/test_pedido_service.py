@@ -237,3 +237,41 @@ def test_pedido_mesmo_produto(session_teste):
     assert len(pedido.itens) == 2
     assert pedido.itens[0].quantidade == 2
     assert pedido.itens[1].quantidade == 3
+
+
+def test_pedido_mesmo_produto_estoque_insuficiente(session_teste):
+    usuario = Usuario(
+        nome="teste",
+        email="teste@gmail.com",
+        senha="12345678"
+    )
+
+    produto = Produto(
+        nome="Teclado",
+        preco=220.00,
+        estoque=10
+    )
+
+    session_teste.add_all([usuario, produto])
+    session_teste.commit()
+
+    pedido_schema = PedidoCreate(
+        itens = [
+            ItemPedidoCreate(
+                id_produto=produto.id,
+                quantidade=5
+            ),
+            ItemPedidoCreate(
+                id_produto=produto.id,
+                quantidade=6
+            )
+        ]
+    )
+
+    pedido = criar_pedido(pedido_schema,
+                          usuario,
+                          session_teste)
+
+    assert pedido is False
+    assert produto.estoque == 10
+    assert session_teste.query(Pedido).count() == 0
