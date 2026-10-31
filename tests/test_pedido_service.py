@@ -13,7 +13,7 @@ def test_criar_pedido(session_teste):
 
     produto = Produto(
         nome="Teclado",
-        preco=320.00,
+        preco=220.00,
         estoque=10
     )
 
@@ -38,13 +38,7 @@ def test_criar_pedido(session_teste):
 
     assert pedido is not None
     assert produto.estoque == 8
-
-    id_pedido = pedido.id
-
-    with Session(bind=session_teste.get_bind()) as session_verificacao:
-        pedido_salvo = session_verificacao.query(Pedido).filter(Pedido.id==id_pedido).first()
-
-        assert pedido_salvo is not None
+    assert session_teste.query(Pedido).filter(Pedido.id==pedido.id).first()
 
 
 def test_estoque_insuficiente(session_teste):
@@ -194,13 +188,52 @@ def test_pedido_varios_produtos_estoque_insuficiente(session_teste):
         ]
     )
 
-    pedido = criar_pedido(pedido_schema, usuario, session_teste)
+    pedido = criar_pedido(
+        pedido_schema,
+        usuario,
+        session_teste)
 
     assert pedido is False
     assert mouse.estoque == 5
     assert teclado.estoque == 3
     assert session_teste.query(Pedido).count() == 0
 
-    
 
+def test_pedido_mesmo_produto(session_teste):
+    usuario = Usuario(
+        nome="teste",
+        email="teste@gmail.com",
+        senha="12345678"
+    )
 
+    produto = Produto(
+        nome="Teclado",
+        preco=220.00,
+        estoque=10
+    )
+
+    session_teste.add_all([usuario, produto])
+    session_teste.commit()
+
+    pedido_schema = PedidoCreate(
+        itens = [
+            ItemPedidoCreate(
+                id_produto=produto.id,
+                quantidade=2
+            ),
+            ItemPedidoCreate(
+                id_produto=produto.id,
+                quantidade=3
+            )
+        ]
+    )
+
+    pedido = criar_pedido(pedido_schema, 
+                          usuario,
+                          session_teste)
+
+    assert pedido is not None
+    assert produto.estoque == 5
+    assert len(pedido.itens) == 2
+    assert pedido.itens[0].quantidade == 2
+    assert pedido.itens[1].quantidade == 3
