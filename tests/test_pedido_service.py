@@ -1,15 +1,24 @@
-from sqlalchemy.orm import Session
 from models import Usuario, Produto, Pedido
 from schemas import PedidoCreate, ItemPedidoCreate
 from services.pedido_service import criar_pedido
+import pytest
+
+@pytest.fixture
+def usuario_teste(session_teste):
+     usuario = Usuario(
+         nome="teste",
+         email="teste@gmail.com",
+         senha="12345678"
+     )
+
+     session_teste.add(usuario)
+     session_teste.commit()
+
+     return usuario
 
 
-def test_criar_pedido(session_teste):
-    usuario = Usuario(
-        nome="teste",
-        email="teste@gmail.com",
-        senha="12345678"
-    )
+def test_criar_pedido(usuario_teste, session_teste):
+    usuario = usuario_teste
 
     produto = Produto(
         nome="Teclado",
@@ -17,44 +26,6 @@ def test_criar_pedido(session_teste):
         estoque=10
     )
 
-    session_teste.add(usuario)
-    session_teste.add(produto)
-    session_teste.commit()
-
-    pedido_schema = PedidoCreate(
-        itens = [
-            ItemPedidoCreate(
-                id_produto=produto.id,
-                quantidade=2
-            )
-        ]
-    )
-
-    pedido = criar_pedido(
-        pedido_schema,
-        usuario,
-        session_teste
-    )
-
-    assert pedido is not None
-    assert produto.estoque == 8
-    assert session_teste.query(Pedido).filter(Pedido.id==pedido.id).first()
-
-
-def test_estoque_insuficiente(session_teste):
-    usuario = Usuario(
-        nome="teste",
-        email="teste@gmail.com",
-        senha="12345678"
-    )
-
-    produto = Produto(
-        nome="Teclado",
-        preco=220.00,
-        estoque=5
-    )
-
-    session_teste.add(usuario)
     session_teste.add(produto)
     session_teste.commit()
 
@@ -68,25 +39,50 @@ def test_estoque_insuficiente(session_teste):
     )
 
     pedido = criar_pedido(
+        pedido_schema,
+        usuario,
+        session_teste
+    )
+
+    assert pedido is not None
+    assert produto.estoque == 0
+    assert session_teste.query(Pedido).filter(Pedido.id==pedido.id).first()
+
+
+def test_estoque_insuficiente(usuario_teste, session_teste):
+    usuario = usuario_teste
+
+    produto = Produto(
+        nome="Teclado",
+        preco=220.00,
+        estoque=10
+    )
+
+    session_teste.add(produto)
+    session_teste.commit()
+
+    pedido_schema = PedidoCreate(
+        itens = [
+            ItemPedidoCreate(
+                id_produto=produto.id,
+                quantidade=11
+            )
+        ]
+    )
+
+    pedido = criar_pedido(
         pedido_schema, 
         usuario,
         session_teste
     )
 
     assert pedido is False
-    assert produto.estoque == 5
+    assert produto.estoque == 10
     assert session_teste.query(Pedido).count() == 0
 
 
-def test_produto_inexistente(session_teste):
-    usuario = Usuario(
-        nome="teste",
-        email="teste@gmail.com",
-        senha="teste12345678"
-    )
-
-    session_teste.add(usuario)
-    session_teste.commit()
+def test_produto_inexistente(usuario_teste, session_teste):
+    usuario = usuario_teste
 
     pedido_schema = PedidoCreate(
             itens = [
@@ -106,12 +102,8 @@ def test_produto_inexistente(session_teste):
     assert session_teste.query(Pedido).count() == 0
 
 
-def test_pedido_com_varios_produtos(session_teste):
-    usuario = Usuario(
-        nome="teste",
-        email="teste@gmail.com",
-        senha="teste12345678"
-    )
+def test_pedido_com_varios_produtos(usuario_teste, session_teste):
+    usuario = usuario_teste
 
     teclado = Produto(
         nome="Teclado",
@@ -125,7 +117,8 @@ def test_pedido_com_varios_produtos(session_teste):
         estoque=8
     )
 
-    session_teste.add_all([usuario, teclado, mouse])
+    session_teste.add(teclado)
+    session_teste.add(mouse)
     session_teste.commit()
 
     pedido_schema = PedidoCreate(
@@ -153,12 +146,8 @@ def test_pedido_com_varios_produtos(session_teste):
     assert len(pedido.itens) == 2
 
 
-def test_pedido_varios_produtos_estoque_insuficiente(session_teste):
-    usuario = Usuario(
-        nome="teste",
-        email="teste@gmail.com",
-        senha="12345678"
-    )
+def test_pedido_varios_produtos_estoque_insuficiente(usuario_teste, session_teste):
+    usuario = usuario_teste
 
     teclado = Produto(
         nome="Teclado",
@@ -172,7 +161,8 @@ def test_pedido_varios_produtos_estoque_insuficiente(session_teste):
         estoque=5
     )
 
-    session_teste.add_all([usuario, teclado, mouse])
+    session_teste.add(teclado)
+    session_teste.add(mouse)
     session_teste.commit()
 
     pedido_schema = PedidoCreate(
@@ -194,17 +184,13 @@ def test_pedido_varios_produtos_estoque_insuficiente(session_teste):
         session_teste)
 
     assert pedido is False
-    assert mouse.estoque == 5
     assert teclado.estoque == 3
+    assert mouse.estoque == 5
     assert session_teste.query(Pedido).count() == 0
 
 
-def test_pedido_mesmo_produto(session_teste):
-    usuario = Usuario(
-        nome="teste",
-        email="teste@gmail.com",
-        senha="12345678"
-    )
+def test_pedido_mesmo_produto(usuario_teste, session_teste):
+    usuario = usuario_teste
 
     produto = Produto(
         nome="Teclado",
@@ -212,7 +198,7 @@ def test_pedido_mesmo_produto(session_teste):
         estoque=10
     )
 
-    session_teste.add_all([usuario, produto])
+    session_teste.add(produto)
     session_teste.commit()
 
     pedido_schema = PedidoCreate(
@@ -239,12 +225,8 @@ def test_pedido_mesmo_produto(session_teste):
     assert pedido.itens[1].quantidade == 3
 
 
-def test_pedido_mesmo_produto_estoque_insuficiente(session_teste):
-    usuario = Usuario(
-        nome="teste",
-        email="teste@gmail.com",
-        senha="12345678"
-    )
+def test_pedido_mesmo_produto_estoque_insuficiente(usuario_teste, session_teste):
+    usuario = usuario_teste
 
     produto = Produto(
         nome="Teclado",
@@ -252,7 +234,7 @@ def test_pedido_mesmo_produto_estoque_insuficiente(session_teste):
         estoque=10
     )
 
-    session_teste.add_all([usuario, produto])
+    session_teste.add(produto)
     session_teste.commit()
 
     pedido_schema = PedidoCreate(
