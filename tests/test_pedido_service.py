@@ -49,13 +49,14 @@ def test_criar_pedido(usuario_teste, session_teste):
     assert session_teste.query(Pedido).filter(Pedido.id==pedido.id).first()
 
 
-def test_estoque_insuficiente(usuario_teste, session_teste):
+@pytest.mark.parametrize("estoque, quantidade", [(10, 11), (5, 8), (20, 25), (3, 10)])
+def test_estoque_insuficiente(usuario_teste, estoque, quantidade, session_teste):
     usuario = usuario_teste
 
     produto = Produto(
         nome="Teclado",
         preco=220.00,
-        estoque=10
+        estoque=estoque
     )
 
     session_teste.add(produto)
@@ -65,7 +66,7 @@ def test_estoque_insuficiente(usuario_teste, session_teste):
         itens = [
             ItemPedidoCreate(
                 id_produto=produto.id,
-                quantidade=11
+                quantidade=quantidade
             )
         ]
     )
@@ -77,7 +78,7 @@ def test_estoque_insuficiente(usuario_teste, session_teste):
     )
 
     assert pedido is False
-    assert produto.estoque == 10
+    assert produto.estoque == estoque
     assert session_teste.query(Pedido).count() == 0
 
 
