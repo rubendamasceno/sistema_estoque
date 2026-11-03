@@ -55,7 +55,30 @@ def test_listar_produtos(cliente):
     assert dados[0]["estoque"] == 10
 
 
+def test_buscar_produto_id(cliente):
+    produto = cliente.post("/produtos/", json={
+        "nome": "Teclado",
+        "preco": 150.00,
+        "estoque": 10
+    })
 
+    id_produto = produto.json()["id"]
+
+    resposta = cliente.get(f"/produtos/{id_produto}")
+
+    dados = resposta.json()
+
+    assert resposta.status_code == HTTPStatus.OK
+    assert dados["id"] == id_produto
+    assert dados["nome"] == "Teclado"
+    assert dados["preco"] == 150.00
+    assert dados["estoque"] == 10
+    
+
+def test_buscar_produto_inexistente(cliente):
+    resposta = cliente.get("/produtos/999")
+
+    assert resposta.status_code == HTTPStatus.NOT_FOUND
 
 
 
