@@ -1,10 +1,14 @@
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from main import app
+from dependencies import pegar_sessao, verificar_admin
 from db import Base
-import models
+from models import Usuario, Produto, Pedido, ItemPedido
+
 
 @pytest.fixture # Disponibiliza a sessão de teste para as funções
 def session_teste():
@@ -27,3 +31,28 @@ def session_teste():
         session.close()
         Base.metadata.drop_all(bind=engine) # Limpeza das tabelas no banco
         engine.dispose() # Libera os recursos de engine  
+
+
+@pytest.fixture
+def cliente(session_teste):
+    def pegar_sessao_teste():
+        yield session_teste
+
+    def verificar_admin_teste():
+        admin= Usuario(
+            nome="admin",
+            email="admin@gmail.com",
+            senha="12345678",
+            admin=True
+        )
+        return admin
+
+    app.dependency_overrides[pegar_sessao] = pegar_sessao_teste
+    app.dependency_overrides[verificar_admin] = verificar_admin_teste
+
+    try:
+        with TestClient(app) as cliente:
+            yield cliente
+
+    finally:
+        app.dependency_overrides.clear()
