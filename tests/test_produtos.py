@@ -166,7 +166,29 @@ def test_atualizar_produto_estoque_negativo(cliente):
     assert dados["estoque"] == 10
 
 
+def test_deletar_produto(cliente):
+    produto = cliente.post("/produtos/", json={
+        "nome": "Teclado",
+        "preco": 200.00,
+        "estoque": 10
+    })
 
+    id_produto = produto.json()["id"]
+
+    resposta = cliente.delete(f"/produtos/{id_produto}")
+    dados_resposta = resposta.json()
+
+    consulta = cliente.get("/produtos/")
+
+    assert resposta.status_code == HTTPStatus.OK
+    assert dados_resposta["id"] == id_produto
+    assert len(consulta.json()) == 0
+
+
+def test_deletar_produto_inexistente(cliente):
+    resposta = cliente.delete("/produtos/999")
+
+    assert resposta.status_code == HTTPStatus.NOT_FOUND
 
 
 
