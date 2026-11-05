@@ -23,7 +23,11 @@ def test_produto_preco_negativo(cliente):
         "estoque": 10
     })
 
+    consulta = cliente.get("/produtos/")
+
     assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert consulta.status_code == HTTPStatus.OK
+    assert len(consulta.json()) == 0
 
 
 
@@ -34,7 +38,11 @@ def test_produto_estoque_negativo(cliente):
         "estoque": -5
     })
 
+    consulta = cliente.get("/produtos/")
+
     assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert consulta.status_code == HTTPStatus.OK
+    assert len(consulta.json()) == 0
 
 
 def test_listar_produtos(cliente):
@@ -61,6 +69,8 @@ def test_buscar_produto_id(cliente):
         "estoque": 10
     })
 
+    assert produto.status_code == HTTPStatus.OK
+
     id_produto = produto.json()["id"]
 
     resposta = cliente.get(f"/produtos/{id_produto}")
@@ -86,6 +96,8 @@ def test_atualizar_produto(cliente):
         "estoque": 10
     })
 
+    assert produto.status_code == HTTPStatus.OK
+
     id_produto = produto.json()["id"]
 
     resposta = cliente.put(f"/produtos/{id_produto}", json={
@@ -98,6 +110,7 @@ def test_atualizar_produto(cliente):
     dados = resposta_get.json()
 
 
+    assert resposta.status_code == HTTPStatus.OK
     assert resposta_get.status_code == HTTPStatus.OK
     assert dados["id"] == id_produto
     assert dados["nome"] == "Teclado Mecânico"
@@ -123,6 +136,8 @@ def test_atualizar_produto_preco_negativo(cliente):
         "estoque": 10
     })
 
+    assert produto.status_code == HTTPStatus.OK
+    
     id_produto = produto.json()["id"]
 
     resposta = cliente.put(f"/produtos/{id_produto}", json={
@@ -135,6 +150,7 @@ def test_atualizar_produto_preco_negativo(cliente):
     dados = resposta_get.json()
 
     assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert resposta_get.status_code == HTTPStatus.OK
     assert dados["id"] == id_produto
     assert dados["nome"] == "Teclado"
     assert dados["preco"] == 150
@@ -148,6 +164,8 @@ def test_atualizar_produto_estoque_negativo(cliente):
         "estoque": 10
     })
 
+    assert produto.status_code == HTTPStatus.OK
+
     id_produto = produto.json()["id"]
 
     resposta = cliente.put(f"/produtos/{id_produto}", json={
@@ -160,6 +178,7 @@ def test_atualizar_produto_estoque_negativo(cliente):
     dados = resposta_get.json()
 
     assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert resposta_get.status_code == HTTPStatus.OK
     assert dados["id"] == id_produto
     assert dados["nome"] == "Mouse"
     assert dados["preco"] == 200.00
@@ -173,21 +192,21 @@ def test_deletar_produto(cliente):
         "estoque": 10
     })
 
+    assert produto.status_code == HTTPStatus.OK
+
     id_produto = produto.json()["id"]
 
     resposta = cliente.delete(f"/produtos/{id_produto}")
     dados_resposta = resposta.json()
 
-    consulta = cliente.get("/produtos/")
+    consulta = cliente.get(f"/produtos/{id_produto}")
 
     assert resposta.status_code == HTTPStatus.OK
+    assert consulta.status_code == HTTPStatus.NOT_FOUND
     assert dados_resposta["id"] == id_produto
-    assert len(consulta.json()) == 0
 
 
 def test_deletar_produto_inexistente(cliente):
     resposta = cliente.delete("/produtos/999")
 
     assert resposta.status_code == HTTPStatus.NOT_FOUND
-
-
