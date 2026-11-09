@@ -68,6 +68,7 @@ def atualizar_usuario(id, usuario_schema, session):
     try:
         usuario.nome = usuario_schema.nome
         usuario.email = usuario_schema.email
+        usuario.admin = usuario_schema.admin
         session.commit()
         
     except SQLAlchemyError:

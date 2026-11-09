@@ -62,7 +62,7 @@ def test_listar_produtos(cliente):
     assert dados[0]["estoque"] == 10
 
 
-def test_buscar_produto_id(cliente):
+def test_buscar_produto_por_id(cliente):
     produto = cliente.post("/produtos/", json={
         "nome": "Teclado",
         "preco": 150.00,

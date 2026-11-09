@@ -2,8 +2,8 @@ from http import HTTPStatus
 
 def test_criar_usuario(cliente):
     resposta = cliente.post("/usuarios/", json={
-        "nome": "ruben",
-        "email": "ruben@gmail.com",
+        "nome": "teste",
+        "email": "teste@gmail.com",
         "senha": "12345678",
         "admin": False
     })
@@ -11,8 +11,8 @@ def test_criar_usuario(cliente):
     dados = resposta.json()
 
     assert resposta.status_code == HTTPStatus.OK
-    assert dados["nome"] == "ruben"
-    assert dados["email"] == "ruben@gmail.com"
+    assert dados["nome"] == "teste"
+    assert dados["email"] == "teste@gmail.com"
     assert "id" in dados
 
 
@@ -34,17 +34,70 @@ def test_criar_usuario_admin(cliente):
 
 def test_listar_usuarios(cliente):
     usuario = cliente.post("/usuarios/", json={
-        "nome": "ruben",
-        "email": "ruben@gmail.com",
+        "nome": "teste",
+        "email": "teste@gmail.com",
         "senha": "12345678",
         "admin": True
     })
+
+    assert usuario.status_code == HTTPStatus.OK
     
     consulta = cliente.get("/usuarios/")
+    dados = consulta.json()
 
     assert usuario.status_code == HTTPStatus.OK
     assert consulta.status_code == HTTPStatus.OK
-    assert len(consulta.json()) == 1
-    assert consulta.json()[0]["nome"] == "ruben"
-    assert consulta.json()[0]["email"] == "ruben@gmail.com"
-    assert consulta.json()[0]["admin"] is True
+    assert len(dados) == 1
+    assert dados[0]["nome"] == "teste"
+    assert dados[0]["email"] == "teste@gmail.com"
+    assert dados[0]["admin"] is True
+
+def test_buscar_ususario_por_id(cliente):
+    usuario = cliente.post("/usuarios/", json={
+        "nome": "teste",
+        "email": "teste@gmail.com",
+        "senha": "12345678",
+        "admin": True
+    })
+
+    assert usuario.status_code == HTTPStatus.OK
+
+    id_usuario = usuario.json()["id"]
+
+    resposta = cliente.get(f"/usuarios/{id_usuario}")
+    dados = resposta.json()
+
+    assert resposta.status_code == HTTPStatus.OK
+    assert dados["id"] == id_usuario
+    assert dados["nome"] == "teste"
+    assert dados["email"] == "teste@gmail.com"
+    assert dados["admin"] is True
+
+
+def test_atualizar_usuario(cliente):
+    usuario = cliente.post("/usuarios/", json={
+        "nome": "teste",
+        "email": "teste@gmail.com",
+        "senha": "12345678",
+        "admin": True
+    })
+
+    assert usuario.status_code == HTTPStatus.OK
+
+    id_usuario = usuario.json()["id"]
+
+    resposta = cliente.put(f"/usuarios/{id_usuario}", json={
+        "nome": "teste atualizado",
+        "email": "teste.atualizado@gmail.com",
+        "senha": "12345678",
+        "admin": False
+    })
+
+    dados = resposta.json()
+
+    assert resposta.status_code == HTTPStatus.OK
+    assert dados["id"] == id_usuario
+    assert dados["nome"] == "teste atualizado"
+    assert dados["email"] == "teste.atualizado@gmail.com"
+    assert dados["admin"] is False
+

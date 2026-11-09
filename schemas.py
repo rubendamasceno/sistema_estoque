@@ -47,6 +47,7 @@ class UsuarioResponse(BaseModel):
 class UsuarioUpdate(BaseModel):
     nome: str = Field(min_length=3)
     email: EmailStr
+    admin: bool
 
 
 class ItemPedidoCreate(BaseModel):
