@@ -1,5 +1,6 @@
 from http import HTTPStatus
 
+
 def test_criar_usuario(cliente):
     resposta = cliente.post("/usuarios/", json={
         "nome": "teste",
@@ -52,6 +53,7 @@ def test_listar_usuarios(cliente):
     assert dados[0]["email"] == "teste@gmail.com"
     assert dados[0]["admin"] is True
 
+
 def test_buscar_ususario_por_id(cliente):
     usuario = cliente.post("/usuarios/", json={
         "nome": "teste",
@@ -100,4 +102,26 @@ def test_atualizar_usuario(cliente):
     assert dados["nome"] == "teste atualizado"
     assert dados["email"] == "teste.atualizado@gmail.com"
     assert dados["admin"] is False
+
+
+def test_excluir_usuario(cliente):
+    usuario = cliente.post("/usuarios/", json={
+        "nome": "teste",
+        "email": "teste@gmail.com",
+        "senha": "12345678",
+        "admin": False
+    })
+
+    assert usuario.status_code == HTTPStatus.OK
+
+    id_usuario = usuario.json()["id"]
+
+    resposta = cliente.delete(f"/usuarios/{id_usuario}")
+    dados_resposta = resposta.json()
+
+    consulta = cliente.get(f"/usuarios/{id_usuario}")
+
+    assert resposta.status_code == HTTPStatus.OK
+    assert consulta.status_code == HTTPStatus.NOT_FOUND
+    assert dados_resposta["id"] == id_usuario
 
