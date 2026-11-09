@@ -33,6 +33,35 @@ def test_criar_usuario_admin(cliente):
     assert "id" in dados
 
 
+def test_usuario_email_duplicado(cliente):
+    usuario = cliente.post("/usuarios/", json={ 
+    "nome": "teste",
+    "email": "teste@gmail.com",
+    "senha": "12345678",
+    "admin": False
+    })
+
+    assert usuario.status_code == HTTPStatus.OK
+
+    id_usuario = usuario.json()["id"]
+
+    usuario_duplicado = cliente.post("/usuarios/", json={
+        "nome": "teste2",
+        "email": "teste@gmail.com",
+        "senha": "123456789",
+        "admin": False
+    })
+
+    consulta = cliente.get(f"/usuarios/")
+    dados = consulta.json()
+
+    assert usuario_duplicado.status_code == HTTPStatus.CONFLICT
+    assert len(dados) == 1
+    assert dados[0]["id"] == id_usuario
+    assert dados[0]["nome"] == "teste"
+    assert dados[0]["email"] == "teste@gmail.com"
+
+
 def test_listar_usuarios(cliente):
     usuario = cliente.post("/usuarios/", json={
         "nome": "teste",
