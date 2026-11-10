@@ -56,6 +56,7 @@ def test_usuario_email_duplicado(cliente):
     dados = consulta.json()
 
     assert usuario_duplicado.status_code == HTTPStatus.CONFLICT
+    assert consulta.status_code == HTTPStatus.OK
     assert len(dados) == 1
     assert dados[0]["id"] == id_usuario
     assert dados[0]["nome"] == "teste"
@@ -74,6 +75,7 @@ def test_usuario_email_invalido(cliente):
     dados = consulta.json()
 
     assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert consulta.status_code == HTTPStatus.OK
     assert dados == []
     
 
@@ -89,6 +91,7 @@ def test_criar_usuario_senha_curta(cliente):
     dados = consulta.json()
 
     assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert consulta.status_code == HTTPStatus.OK
     assert dados == []
 
 
@@ -104,6 +107,7 @@ def test_criar_usuario_nome_curto(cliente):
     dados = consulta.json()
 
     assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert consulta.status_code == HTTPStatus.OK
     assert dados == []
 
 
@@ -118,6 +122,7 @@ def test_criar_usuario_sem_nome(cliente):
     dados = consulta.json()
 
     assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert consulta.status_code == HTTPStatus.OK
     assert dados ==[]
 
 
@@ -132,6 +137,7 @@ def test_criar_usuario_sem_email(cliente):
     dados = consulta.json()
 
     assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert consulta.status_code == HTTPStatus.OK
     assert dados == []
 
 
@@ -146,6 +152,7 @@ def test_criar_usuario_sem_senha(cliente):
     dados = consulta.json()
 
     assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert consulta.status_code == HTTPStatus.OK
     assert dados == []
 
 
@@ -160,6 +167,7 @@ def test_criar_usuario_sem_admin(cliente):
     dados = consulta.json()
 
     assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert consulta.status_code == HTTPStatus.OK
     assert dados == []
 
 
@@ -176,7 +184,6 @@ def test_listar_usuarios(cliente):
     consulta = cliente.get("/usuarios/")
     dados = consulta.json()
 
-    assert usuario.status_code == HTTPStatus.OK
     assert consulta.status_code == HTTPStatus.OK
     assert len(dados) == 1
     assert dados[0]["nome"] == "teste"
@@ -282,6 +289,7 @@ def test_atualizar_usuario_email_duplicado(cliente):
     dados = consulta.json()
 
     assert resposta.status_code == HTTPStatus.CONFLICT
+    assert consulta.status_code == HTTPStatus.OK
     assert dados[0]["id"] == id_usuario1
     assert dados[0]["nome"] == "teste1"
     assert dados[0]["email"] == "teste1@gmail.com"
@@ -312,6 +320,7 @@ def test_atualizar_usuario_email_invalido(cliente):
     dados = consulta.json()
 
     assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert consulta.status_code == HTTPStatus.OK
     assert dados["id"] == id_usuario
     assert dados["nome"] == "teste"
     assert dados["email"] == "teste@gmail.com"
@@ -340,6 +349,7 @@ def test_atualizar_usuario_nome_curto(cliente):
     dados = consulta.json()
 
     assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert consulta.status_code == HTTPStatus.OK
     assert dados["id"] == id_usuario
     assert dados["nome"] == "teste"
     assert dados["email"] == "teste@gmail.com"
@@ -367,6 +377,7 @@ def test_atualizar_usuario_sem_nome(cliente):
     dados = consulta.json()
 
     assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert consulta.status_code == HTTPStatus.OK
     assert dados["id"] == id_usuario
     assert dados["nome"] == "teste"
     assert dados["email"] == "teste@gmail.com"
@@ -394,6 +405,7 @@ def test_atualizar_usuario_sem_email(cliente):
     dados = consulta.json()
 
     assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert consulta.status_code == HTTPStatus.OK
     assert dados["id"] == id_usuario
     assert dados["nome"] == "teste"
     assert dados["email"] == "teste@gmail.com"
@@ -420,4 +432,28 @@ def test_excluir_usuario(cliente):
     assert resposta.status_code == HTTPStatus.OK
     assert consulta.status_code == HTTPStatus.NOT_FOUND
     assert dados_resposta["id"] == id_usuario
+
+
+def test_excluir_usuario_inexistente(cliente):
+    usuario = cliente.post("/usuarios/", json={
+        "nome": "teste",
+        "email": "teste@gmail.com",
+        "senha": "12345678",
+        "admin": False
+    })
+
+    assert usuario.status_code == HTTPStatus.OK
+
+    id_usuario = usuario.json()["id"]
+
+    resposta = cliente.delete(f"/usuarios/999")
+
+    consulta = cliente.get(f"/usuarios/{id_usuario}")
+    dados = consulta.json()
+
+    assert resposta.status_code == HTTPStatus.NOT_FOUND
+    assert consulta.status_code == HTTPStatus.OK
+    assert dados["id"] == id_usuario
+
+
 
