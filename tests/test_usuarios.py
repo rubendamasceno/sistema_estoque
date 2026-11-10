@@ -70,8 +70,42 @@ def test_usuario_email_invalido(cliente):
         "admin": False
     })
 
+    consulta = cliente.get("/usuarios/")
+    dados = consulta.json()
+
     assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert dados == []
     
+
+def test_criar_usuario_senha_curta(cliente):
+    resposta = cliente.post("/usuarios/", json={
+        "nome": "teste",
+        "email": "teste@gmail.com",
+        "senha": "123456",
+        "admin": False
+    })
+
+    consulta = cliente.get("/usuarios/")
+    dados = consulta.json()
+
+    assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert dados == []
+
+
+def test_criar_usuario_nome_curto(cliente):
+    resposta = cliente.post("/usuarios/", json={
+        "nome": "te",
+        "email": "teste@gmail.com",
+        "senha": "12345678",
+        "admin": False
+    })
+
+    consulta = cliente.get("usuarios/")
+    dados = consulta.json()
+
+    assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert dados == []
+
 
 def test_listar_usuarios(cliente):
     usuario = cliente.post("/usuarios/", json={
