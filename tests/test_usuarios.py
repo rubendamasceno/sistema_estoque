@@ -100,7 +100,7 @@ def test_criar_usuario_nome_curto(cliente):
         "admin": False
     })
 
-    consulta = cliente.get("usuarios/")
+    consulta = cliente.get("/usuarios/")
     dados = consulta.json()
 
     assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
@@ -149,6 +149,18 @@ def test_criar_usuario_sem_senha(cliente):
     assert dados == []
 
 
+def test_criar_usuario_sem_admin(cliente):
+    resposta = cliente.post("/usuarios/", json={
+        "nome": "teste",
+        "email": "teste@gmail.com",
+        "senha": "12345678"
+    })
+
+    consulta = cliente.get("/usuarios/")
+    dados = consulta.json()
+
+    assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert dados == []
 
 
 def test_listar_usuarios(cliente):
@@ -192,6 +204,11 @@ def test_buscar_ususario_por_id(cliente):
     assert dados["nome"] == "teste"
     assert dados["email"] == "teste@gmail.com"
     assert dados["admin"] is True
+
+
+
+
+
 
 
 def test_atualizar_usuario(cliente):
