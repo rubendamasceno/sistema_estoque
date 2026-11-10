@@ -62,6 +62,17 @@ def test_usuario_email_duplicado(cliente):
     assert dados[0]["email"] == "teste@gmail.com"
 
 
+def test_usuario_email_invalido(cliente):
+    resposta = cliente.post("/usuarios/", json={
+        "nome": "teste",
+        "email": "teste@example",
+        "senha": "12345678",
+        "admin": False
+    })
+
+    assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    
+
 def test_listar_usuarios(cliente):
     usuario = cliente.post("/usuarios/", json={
         "nome": "teste",
