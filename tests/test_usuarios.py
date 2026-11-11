@@ -191,7 +191,7 @@ def test_listar_usuarios(cliente):
     assert dados[0]["admin"] is True
 
 
-def test_buscar_ususario_por_id(cliente):
+def test_buscar_ususario_pelo_id(cliente):
     usuario = cliente.post("/usuarios/", json={
         "nome": "teste",
         "email": "teste@gmail.com",
