@@ -39,7 +39,7 @@ def cliente(session_teste):
         yield session_teste
 
     def verificar_admin_teste():
-        admin= Usuario(
+        admin = Usuario(
             nome="admin",
             email="admin@gmail.com",
             senha="12345678",
@@ -56,3 +56,30 @@ def cliente(session_teste):
 
     finally:
         app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def usuario_autenticado(cliente):
+    usuario = cliente.post("/usuarios/", json={
+        "nome": "teste",
+        "email": "teste@gmail.com",
+        "senha": "12345678",
+        "admin": False
+    })
+
+    assert usuario.status_code == 200
+
+    login = cliente.post("/usuarios/login", json={
+    "email": "teste@gmail.com",
+    "senha": "12345678"
+    })
+
+    assert login.status_code == 200
+
+    access_token = login.json()["access_token"]
+
+    cliente.headers.update({
+        "Authorization": f"Bearer {access_token}"
+    })
+
+    return cliente
