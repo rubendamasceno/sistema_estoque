@@ -175,3 +175,15 @@ def test_buscar_pedido_de_outro_usuario(usuario_autenticado):
     assert consulta.status_code == HTTPStatus.NOT_FOUND
     assert consulta.json()["detail"] == "Pedido não encontrado."
 
+
+def test_listar_pedido_sem_token(cliente):
+    resposta = cliente.get("/pedidos/1")
+
+    assert resposta.status_code == HTTPStatus.UNAUTHORIZED
+
+
+def test_pedido_token_invalido(cliente):
+    resposta = cliente.get("/pedidos/1", headers={"Authorization": "Bearer token_invalido"})
+
+    assert resposta.status_code == HTTPStatus.UNAUTHORIZED
+
