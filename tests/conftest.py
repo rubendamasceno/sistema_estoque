@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from main import app
-from dependencies import pegar_sessao, verificar_admin
+from dependencies import pegar_sessao
 from db import Base
 from models import Usuario, Produto, Pedido, ItemPedido
 
@@ -37,15 +37,6 @@ def session_teste():
 def cliente(session_teste):
     def pegar_sessao_teste():
         yield session_teste
-
-    def verificar_admin_teste():
-        admin = Usuario(
-            nome="admin",
-            email="admin@gmail.com",
-            senha="12345678",
-            admin=True
-        )
-        return admin
 
     app.dependency_overrides[pegar_sessao] = pegar_sessao_teste
 

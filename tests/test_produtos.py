@@ -1,7 +1,7 @@
 from http import HTTPStatus
 
-def test_criar_produto(cliente):
-    resposta = cliente.post("/produtos/", json={
+def test_criar_produto(usuario_admin):
+    resposta = usuario_admin.post("/produtos/", json={
         "nome": "Teclado",
         "preco": 150.00,
         "estoque": 10
@@ -16,14 +16,14 @@ def test_criar_produto(cliente):
     assert "id" in dados 
 
 
-def test_produto_preco_negativo(cliente):
-    resposta = cliente.post("/produtos/", json={
+def test_produto_preco_negativo(usuario_admin):
+    resposta = usuario_admin.post("/produtos/", json={
         "nome": "Teclado",
         "preco": -150.00,
         "estoque": 10
     })
 
-    consulta = cliente.get("/produtos/")
+    consulta = usuario_admin.get("/produtos/")
 
     assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
     assert consulta.status_code == HTTPStatus.OK
@@ -31,28 +31,28 @@ def test_produto_preco_negativo(cliente):
 
 
 
-def test_produto_estoque_negativo(cliente):
-    resposta = cliente.post("/produtos/", json={
+def test_produto_estoque_negativo(usuario_admin):
+    resposta = usuario_admin.post("/produtos/", json={
         "nome": "Mouse",
         "preco": 80.00,
         "estoque": -5
     })
 
-    consulta = cliente.get("/produtos/")
+    consulta = usuario_admin.get("/produtos/")
 
     assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
     assert consulta.status_code == HTTPStatus.OK
     assert len(consulta.json()) == 0
 
 
-def test_listar_produtos(cliente):
-    cliente.post("/produtos/", json={
+def test_listar_produtos(usuario_admin):
+    produto = usuario_admin.post("/produtos/", json={
             "nome": "Teclado",
             "preco": 150.00,
             "estoque": 10
         })
 
-    resposta = cliente.get("/produtos/")
+    resposta = usuario_admin.get("/produtos/")
     dados = resposta.json()
 
     assert resposta.status_code == HTTPStatus.OK
@@ -62,8 +62,8 @@ def test_listar_produtos(cliente):
     assert dados[0]["estoque"] == 10
 
 
-def test_buscar_produto_por_id(cliente):
-    produto = cliente.post("/produtos/", json={
+def test_buscar_produto_por_id(usuario_admin):
+    produto = usuario_admin.post("/produtos/", json={
         "nome": "Teclado",
         "preco": 150.00,
         "estoque": 10
@@ -73,7 +73,7 @@ def test_buscar_produto_por_id(cliente):
 
     id_produto = produto.json()["id"]
 
-    resposta = cliente.get(f"/produtos/{id_produto}")
+    resposta = usuario_admin.get(f"/produtos/{id_produto}")
     dados = resposta.json()
 
     assert resposta.status_code == HTTPStatus.OK
@@ -83,14 +83,14 @@ def test_buscar_produto_por_id(cliente):
     assert dados["estoque"] == 10
     
 
-def test_buscar_produto_inexistente(cliente):
-    resposta = cliente.get("/produtos/999")
+def test_buscar_produto_inexistente(usuario_admin):
+    resposta = usuario_admin.get("/produtos/999")
 
     assert resposta.status_code == HTTPStatus.NOT_FOUND
 
 
-def test_atualizar_produto(cliente):
-    produto = cliente.post("/produtos/", json={
+def test_atualizar_produto(usuario_admin):
+    produto = usuario_admin.post("/produtos/", json={
         "nome": "Teclado",
         "preco": 150.00,
         "estoque": 10
@@ -100,13 +100,13 @@ def test_atualizar_produto(cliente):
 
     id_produto = produto.json()["id"]
 
-    resposta = cliente.put(f"/produtos/{id_produto}", json={
+    resposta = usuario_admin.put(f"/produtos/{id_produto}", json={
         "nome": "Teclado Mecânico",
         "preco": 200.00,
         "estoque": 5
     })
 
-    resposta_get = cliente.get(f"/produtos/{id_produto}")
+    resposta_get = usuario_admin.get(f"/produtos/{id_produto}")
     dados = resposta_get.json()
 
 
@@ -118,8 +118,8 @@ def test_atualizar_produto(cliente):
     assert dados["estoque"] == 5
 
 
-def test_atualizar_produto_inexistente(cliente):
-    resposta = cliente.put("/produtos/999", json={
+def test_atualizar_produto_inexistente(usuario_admin):
+    resposta = usuario_admin.put("/produtos/999", json={
         "nome": "Teclado Mecânico",
         "preco": 200.00,
         "estoque": 5
@@ -129,8 +129,8 @@ def test_atualizar_produto_inexistente(cliente):
     assert resposta.status_code == HTTPStatus.NOT_FOUND 
 
 
-def test_atualizar_produto_preco_negativo(cliente):
-    produto = cliente.post("/produtos/", json={
+def test_atualizar_produto_preco_negativo(usuario_admin):
+    produto = usuario_admin.post("/produtos/", json={
         "nome": "Teclado",
         "preco": 150.00,
         "estoque": 10
@@ -140,13 +140,13 @@ def test_atualizar_produto_preco_negativo(cliente):
     
     id_produto = produto.json()["id"]
 
-    resposta = cliente.put(f"/produtos/{id_produto}", json={
+    resposta = usuario_admin.put(f"/produtos/{id_produto}", json={
         "nome": "Teclado Mecânico",
         "preco": -200.00,
         "estoque": 5
     })
 
-    resposta_get = cliente.get(f"/produtos/{id_produto}")
+    resposta_get = usuario_admin.get(f"/produtos/{id_produto}")
     dados = resposta_get.json()
 
     assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
@@ -157,8 +157,8 @@ def test_atualizar_produto_preco_negativo(cliente):
     assert dados["estoque"] == 10
 
 
-def test_atualizar_produto_estoque_negativo(cliente):
-    produto = cliente.post("/produtos/", json={
+def test_atualizar_produto_estoque_negativo(usuario_admin):
+    produto = usuario_admin.post("/produtos/", json={
         "nome": "Mouse",
         "preco": 200.00,
         "estoque": 10
@@ -168,13 +168,13 @@ def test_atualizar_produto_estoque_negativo(cliente):
 
     id_produto = produto.json()["id"]
 
-    resposta = cliente.put(f"/produtos/{id_produto}", json={
+    resposta = usuario_admin.put(f"/produtos/{id_produto}", json={
         "nome": "Mouse Gamer",
         "preco": 150.00,
         "estoque": -5
     })
 
-    resposta_get = cliente.get(f"/produtos/{id_produto}")
+    resposta_get = usuario_admin.get(f"/produtos/{id_produto}")
     dados = resposta_get.json()
 
     assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
@@ -185,8 +185,8 @@ def test_atualizar_produto_estoque_negativo(cliente):
     assert dados["estoque"] == 10
 
 
-def test_deletar_produto(cliente):
-    produto = cliente.post("/produtos/", json={
+def test_deletar_produto(usuario_admin):
+    produto = usuario_admin.post("/produtos/", json={
         "nome": "Teclado",
         "preco": 200.00,
         "estoque": 10
@@ -196,17 +196,17 @@ def test_deletar_produto(cliente):
 
     id_produto = produto.json()["id"]
 
-    resposta = cliente.delete(f"/produtos/{id_produto}")
+    resposta = usuario_admin.delete(f"/produtos/{id_produto}")
     dados_resposta = resposta.json()
 
-    consulta = cliente.get(f"/produtos/{id_produto}")
+    consulta = usuario_admin.get(f"/produtos/{id_produto}")
 
     assert resposta.status_code == HTTPStatus.OK
     assert consulta.status_code == HTTPStatus.NOT_FOUND
     assert dados_resposta["id"] == id_produto
 
 
-def test_deletar_produto_inexistente(cliente):
-    resposta = cliente.delete("/produtos/999")
+def test_deletar_produto_inexistente(usuario_admin):
+    resposta = usuario_admin.delete("/produtos/999")
 
     assert resposta.status_code == HTTPStatus.NOT_FOUND
