@@ -186,4 +186,3 @@ def test_pedido_token_invalido(cliente):
     resposta = cliente.get("/pedidos/1", headers={"Authorization": "Bearer token_invalido"})
 
     assert resposta.status_code == HTTPStatus.UNAUTHORIZED
-

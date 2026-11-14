@@ -48,7 +48,6 @@ def cliente(session_teste):
         return admin
 
     app.dependency_overrides[pegar_sessao] = pegar_sessao_teste
-    app.dependency_overrides[verificar_admin] = verificar_admin_teste
 
     try:
         with TestClient(app) as cliente:
@@ -76,6 +75,33 @@ def usuario_autenticado(cliente):
 
     assert login.status_code == 200
 
+    access_token = login.json()["access_token"]
+
+    cliente.headers.update({
+        "Authorization": f"Bearer {access_token}"
+    })
+
+    return cliente
+
+
+@pytest.fixture
+def usuario_admin(cliente):
+    usuario = cliente.post("/usuarios/", json={
+        "nome": "Adm",
+        "email": "adm@gmail.com",
+        "senha": "12345678",
+        "admin": True
+    })
+
+    assert usuario.status_code == 200
+
+    login = cliente.post("/usuarios/login", json={
+        "email": "adm@gmail.com",
+        "senha": "12345678"
+    })
+
+    assert login.status_code == 200
+    
     access_token = login.json()["access_token"]
 
     cliente.headers.update({
