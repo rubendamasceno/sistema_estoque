@@ -32,20 +32,22 @@ def session_teste():
         Base.metadata.drop_all(bind=engine) # Limpeza das tabelas no banco
         engine.dispose() # Libera os recursos de engine  
 
-
 @pytest.fixture
-def cliente(session_teste):
+def app_test(session_teste):
     def pegar_sessao_teste():
         yield session_teste
 
     app.dependency_overrides[pegar_sessao] = pegar_sessao_teste
 
-    try:
-        with TestClient(app) as cliente:
-            yield cliente
+    yield app
 
-    finally:
-        app.dependency_overrides.clear()
+    app.dependency_overrides.clear()
+
+    
+@pytest.fixture
+def cliente(app_test):
+    with TestClient(app_test) as cliente:
+        yield cliente
 
 
 @pytest.fixture
