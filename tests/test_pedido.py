@@ -231,6 +231,7 @@ def test_buscar_pedido_com_token_invalido(cliente):
 
     assert resposta.status_code == HTTPStatus.UNAUTHORIZED
 
+
 def test_listar_pedidos(usuario_admin):
     produto = usuario_admin.post("/produtos/", json={
         "nome": "Teclado",
@@ -266,7 +267,6 @@ def test_listar_pedidos(usuario_admin):
     assert dados_produto["estoque"] == 2
     assert dados_pedidos[0]["id"] == id_pedido
     assert len(dados_pedidos) == 1
-
 
 
 def test_listar_pedidos_usuario_comum(usuario_autenticado):
