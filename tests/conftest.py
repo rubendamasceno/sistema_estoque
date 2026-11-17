@@ -51,7 +51,25 @@ def cliente(app_test):
 
 
 @pytest.fixture
-def usuario_autenticado(cliente):
+def criar_cliente(app_test):
+    clientes = []
+
+    def _criar():
+        cliente = TestClient(app_test)
+        clientes.append(cliente)
+        return cliente
+
+    yield _criar
+
+    for cliente in clientes:
+        cliente.close()
+
+
+
+@pytest.fixture
+def usuario_autenticado(criar_cliente):
+    cliente = criar_cliente()
+
     usuario = cliente.post("/usuarios/", json={
         "nome": "teste",
         "email": "teste@gmail.com",
@@ -69,7 +87,6 @@ def usuario_autenticado(cliente):
     assert login.status_code == 200
 
     access_token = login.json()["access_token"]
-
     cliente.headers.update({
         "Authorization": f"Bearer {access_token}"
     })
@@ -78,7 +95,9 @@ def usuario_autenticado(cliente):
 
 
 @pytest.fixture
-def usuario_admin(cliente):
+def usuario_admin(criar_cliente):
+    cliente = criar_cliente()
+
     usuario = cliente.post("/usuarios/", json={
         "nome": "Adm",
         "email": "adm@gmail.com",
@@ -96,7 +115,6 @@ def usuario_admin(cliente):
     assert login.status_code == 200
     
     access_token = login.json()["access_token"]
-
     cliente.headers.update({
         "Authorization": f"Bearer {access_token}"
     })
