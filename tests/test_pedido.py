@@ -1,8 +1,8 @@
 from http import HTTPStatus
 
 
-def test_criar_pedido(usuario_autenticado):
-    produto = usuario_autenticado.post("/produtos/",json={
+def test_criar_pedido(usuario_autenticado, usuario_admin):
+    produto = usuario_admin.post("/produtos/",json={
         "nome": "Teclado",
         "preco": 200.00,
         "estoque": 10
@@ -21,17 +21,21 @@ def test_criar_pedido(usuario_autenticado):
         ]
     })
 
-    get_pedidos = usuario_autenticado.get("/pedidos/")
-    dados_pedidos = get_pedidos.json()
+    assert pedido.status_code == HTTPStatus.OK
+
+    id_pedido = pedido.json()["id"]
+
+    get_pedido = usuario_autenticado.get(f"/pedidos/{id_pedido}")
+    dados_pedido = get_pedido.json()
 
     get_produto = usuario_autenticado.get(f"/produtos/{id_produto}")
     dados_produto = get_produto.json()
 
-    assert pedido.status_code == HTTPStatus.OK
-    assert get_pedidos.status_code == HTTPStatus.OK
+    assert get_pedido.status_code == HTTPStatus.OK
     assert get_produto.status_code == HTTPStatus.OK
-    assert dados_pedidos[0]["itens"][0]["id_produto"] == id_produto
-    assert dados_pedidos[0]["itens"][0]["quantidade"] == 5
+    assert dados_pedido["id"] == id_pedido
+    assert dados_pedido["itens"][0]["id_produto"] == id_produto
+    assert dados_pedido["itens"][0]["quantidade"] == 5
     assert dados_produto["estoque"] == 5
 
 
@@ -49,8 +53,8 @@ def test_criar_pedido_produto_inexistente(usuario_autenticado):
     assert pedido.json()["detail"] == "Produto não encontrado."
 
 
-def test_criar_pedido_produto_estoque_insuficiente(usuario_autenticado):
-    produto = usuario_autenticado.post("/produtos/", json={
+def test_criar_pedido_produto_estoque_insuficiente(usuario_autenticado, usuario_admin):
+    produto = usuario_admin.post("/produtos/", json={
         "nome": "Teclado",
         "preco": 200.00,
         "estoque": 5
@@ -69,7 +73,7 @@ def test_criar_pedido_produto_estoque_insuficiente(usuario_autenticado):
         ]
     })
 
-    get_pedidos = usuario_autenticado.get("/pedidos/")
+    get_pedidos = usuario_admin.get("/pedidos/")
     dados_pedidos = get_pedidos.json()
 
     get_produto = usuario_autenticado.get(f"/produtos/{id_produto}")
@@ -82,8 +86,44 @@ def test_criar_pedido_produto_estoque_insuficiente(usuario_autenticado):
     assert dados_produto["estoque"] == 5
 
 
-def test_buscar_pedido_pelo_id(usuario_autenticado):
-    produto = usuario_autenticado.post("/produtos/", json={
+def test_criar_pedido_sem_token(cliente, usuario_admin):
+    resposta = cliente.post("/pedidos/", json={
+        "itens": [
+            {
+                "id_produto": 99,
+                "quantidade": 3
+            }
+        ]
+    })
+
+    consulta = usuario_admin.get("/pedidos/")
+    dados = consulta.json()
+
+    assert resposta.status_code == HTTPStatus.UNAUTHORIZED
+    assert consulta.status_code == HTTPStatus.OK
+    assert dados == []
+
+
+def test_criar_pedido_com_token_invalido(cliente, usuario_admin):
+    resposta = cliente.post("/pedidos/", json={
+        "itens": [
+            {
+                "id_produto": 9,
+                "quantidade": 3
+            }
+        ]
+    }, headers={"Authorization": "Bearer token_invalido"})
+
+    assert resposta.status_code == HTTPStatus.UNAUTHORIZED
+
+    consulta = usuario_admin.get("/pedidos/")
+    dados = consulta.json()
+
+    assert consulta.status_code == HTTPStatus.OK
+    assert dados == [] 
+
+def test_buscar_pedido_pelo_id(usuario_autenticado, usuario_admin):
+    produto = usuario_admin.post("/produtos/", json={
         "nome": "Teclado",
         "preco": 200.00,
         "estoque": 5
@@ -102,6 +142,8 @@ def test_buscar_pedido_pelo_id(usuario_autenticado):
         ]
     })
 
+    assert pedido.status_code == HTTPStatus.OK
+
     id_pedido = pedido.json()["id"]
 
     get_pedidos = usuario_autenticado.get(f"/pedidos/{id_pedido}")
@@ -110,7 +152,6 @@ def test_buscar_pedido_pelo_id(usuario_autenticado):
     get_produto = usuario_autenticado.get(f"/produtos/{id_produto}")
     dados_produto = get_produto.json()
 
-    assert pedido.status_code == HTTPStatus.OK
     assert get_pedidos.status_code == HTTPStatus.OK
     assert get_produto.status_code == HTTPStatus.OK
     assert dados_pedido["id"] == id_pedido
@@ -126,8 +167,8 @@ def test_buscar_pedido_inexistente(usuario_autenticado):
     assert consulta.json()["detail"] == "Pedido não encontrado."
 
 
-def test_buscar_pedido_de_outro_usuario(usuario_autenticado):
-    produto = usuario_autenticado.post("/produtos/", json={
+def test_buscar_pedido_de_outro_usuario(usuario_autenticado, usuario_admin, criar_cliente):
+    produto = usuario_admin.post("/produtos/", json={
         "nome": "Teclado",
         "preco": 200.00,
         "estoque": 5
@@ -146,9 +187,12 @@ def test_buscar_pedido_de_outro_usuario(usuario_autenticado):
         ]
     })
 
+    assert pedido.status_code == HTTPStatus.OK
+
     id_pedido = pedido.json()["id"]
 
-    usuario2 = usuario_autenticado.post("/usuarios/", json={
+    cliente = criar_cliente()
+    usuario2 = cliente.post("/usuarios/", json={
         "nome": "teste2", 
         "email": "teste2@gmail.com",
         "senha": "123456789",
@@ -157,7 +201,7 @@ def test_buscar_pedido_de_outro_usuario(usuario_autenticado):
 
     assert usuario2.status_code == HTTPStatus.OK
 
-    login = usuario_autenticado.post("/usuarios/login", json={
+    login = cliente.post("/usuarios/login", json={
         "email": "teste2@gmail.com",
         "senha": "123456789"
     })
@@ -166,23 +210,79 @@ def test_buscar_pedido_de_outro_usuario(usuario_autenticado):
 
     access_token = login.json()["access_token"]
 
-    usuario_autenticado.headers.update({
+    cliente.headers.update({
         "authorization": f"Bearer {access_token}"
     })
 
-    consulta = usuario_autenticado.get(f"/pedidos/{id_pedido}")
+    consulta = cliente.get(f"/pedidos/{id_pedido}")
 
     assert consulta.status_code == HTTPStatus.NOT_FOUND
     assert consulta.json()["detail"] == "Pedido não encontrado."
 
 
-def test_listar_pedido_sem_token(cliente):
+def test_buscar_pedido_sem_token(cliente):
     resposta = cliente.get("/pedidos/1")
 
     assert resposta.status_code == HTTPStatus.UNAUTHORIZED
 
 
-def test_pedido_token_invalido(cliente):
+def test_buscar_pedido_com_token_invalido(cliente):
     resposta = cliente.get("/pedidos/1", headers={"Authorization": "Bearer token_invalido"})
 
     assert resposta.status_code == HTTPStatus.UNAUTHORIZED
+
+def test_listar_pedidos(usuario_admin):
+    produto = usuario_admin.post("/produtos/", json={
+        "nome": "Teclado",
+        "preco": 220.00,
+        "estoque": 5
+    })
+
+    assert produto.status_code == HTTPStatus.OK
+
+    id_produto = produto.json()["id"]
+
+    pedido = usuario_admin.post("/pedidos/", json={
+        "itens": [
+            {
+                "id_produto": id_produto,
+                "quantidade": 3
+            }
+        ]
+    })
+
+    assert pedido.status_code == HTTPStatus.OK
+
+    id_pedido = pedido.json()["id"]
+
+    get_pedidos = usuario_admin.get("/pedidos/")
+    dados_pedidos = get_pedidos.json()
+
+    get_produto = usuario_admin.get(f"/produtos/{id_produto}")
+    dados_produto = get_produto.json()
+
+    assert get_pedidos.status_code == HTTPStatus.OK
+    assert dados_produto["id"] == id_produto
+    assert dados_produto["estoque"] == 2
+    assert dados_pedidos[0]["id"] == id_pedido
+    assert len(dados_pedidos) == 1
+
+
+
+def test_listar_pedidos_usuario_comum(usuario_autenticado):
+    resposta = usuario_autenticado.get("/pedidos/")
+
+    assert resposta.status_code == HTTPStatus.FORBIDDEN
+
+
+def test_listar_pedidos_sem_token(cliente):
+    resposta = cliente.get("/pedidos/")
+
+    assert resposta.status_code == HTTPStatus.UNAUTHORIZED
+
+
+def test_listar_pedidos_com_token_invalido(cliente):
+    resposta = cliente.get("/pedidos/", headers={"Authorization": "Bearer token_invalido"})
+
+    assert resposta.status_code == HTTPStatus.UNAUTHORIZED
+
