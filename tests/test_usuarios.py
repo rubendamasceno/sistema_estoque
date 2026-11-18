@@ -2,39 +2,39 @@ from http import HTTPStatus
 
 
 def test_criar_usuario(cliente):
-    resposta = cliente.post("/usuarios/", json={
+    usuario = cliente.post("/usuarios/", json={
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
         "admin": False
     })
 
-    dados = resposta.json()
+    dados = usuario.json()
 
-    assert resposta.status_code == HTTPStatus.OK
+    assert usuario.status_code == HTTPStatus.OK
     assert dados["nome"] == "teste"
     assert dados["email"] == "teste@gmail.com"
     assert "id" in dados
 
 
 def test_criar_usuario_admin(cliente):
-    resposta = cliente.post("/usuarios/", json={
+    usuario = cliente.post("/usuarios/", json={
         "nome": "adm",
         "email": "adm@gmail.com",
         "senha": "12345678",
         "admin": True
     })
 
-    dados = resposta.json()
+    dados = usuario.json()
 
-    assert resposta.status_code == HTTPStatus.OK
+    assert usuario.status_code == HTTPStatus.OK
     assert dados["nome"] == "adm"
     assert dados["email"] == "adm@gmail.com"
     assert "id" in dados
 
 
-def test_usuario_email_duplicado(usuario_admin):
-    usuario = usuario_admin.post("/usuarios/", json={ 
+def test_criar_usuario_email_duplicado(cliente, usuario_admin):
+    usuario = cliente.post("/usuarios/", json={ 
     "nome": "teste",
     "email": "teste@gmail.com",
     "senha": "12345678",
@@ -45,7 +45,7 @@ def test_usuario_email_duplicado(usuario_admin):
 
     id_usuario = usuario.json()["id"]
 
-    usuario_duplicado = usuario_admin.post("/usuarios/", json={
+    usuario_duplicado = cliente.post("/usuarios/", json={
         "nome": "teste2",
         "email": "teste@gmail.com",
         "senha": "123456789",
@@ -62,8 +62,8 @@ def test_usuario_email_duplicado(usuario_admin):
     assert dados["email"] == "teste@gmail.com"
 
 
-def test_usuario_email_invalido(usuario_admin):
-    resposta = usuario_admin.post("/usuarios/", json={
+def test_criar_usuario_email_invalido(cliente, usuario_admin):
+    usuario = cliente.post("/usuarios/", json={
         "nome": "teste",
         "email": "teste@example",
         "senha": "12345678",
@@ -73,13 +73,13 @@ def test_usuario_email_invalido(usuario_admin):
     consulta = usuario_admin.get("/usuarios/")
     dados = consulta.json()
 
-    assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert usuario.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
     assert consulta.status_code == HTTPStatus.OK
     assert len(dados) == 1
     
 
-def test_criar_usuario_senha_curta(usuario_admin):
-    resposta = usuario_admin.post("/usuarios/", json={
+def test_criar_usuario_senha_curta(cliente, usuario_admin):
+    usuario = cliente.post("/usuarios/", json={
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "123456",
@@ -89,13 +89,13 @@ def test_criar_usuario_senha_curta(usuario_admin):
     consulta = usuario_admin.get("/usuarios/")
     dados = consulta.json()
 
-    assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert usuario.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
     assert consulta.status_code == HTTPStatus.OK
     assert len(dados) == 1
 
 
-def test_criar_usuario_nome_curto(usuario_admin):
-    resposta = usuario_admin.post("/usuarios/", json={
+def test_criar_usuario_nome_curto(cliente, usuario_admin):
+    usuario = cliente.post("/usuarios/", json={
         "nome": "te",
         "email": "teste@gmail.com",
         "senha": "12345678",
@@ -105,13 +105,13 @@ def test_criar_usuario_nome_curto(usuario_admin):
     consulta = usuario_admin.get("/usuarios/")
     dados = consulta.json()
 
-    assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert usuario.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
     assert consulta.status_code == HTTPStatus.OK
     assert len(dados) == 1
 
 
-def test_criar_usuario_sem_nome(usuario_admin):
-    resposta = usuario_admin.post("/usuarios/", json={
+def test_criar_usuario_sem_nome(cliente, usuario_admin):
+    usuario = cliente.post("/usuarios/", json={
         "email": "teste@gmail.com",
         "senha": "12345678",
         "admin": False
@@ -120,13 +120,13 @@ def test_criar_usuario_sem_nome(usuario_admin):
     consulta = usuario_admin.get("/usuarios/")
     dados = consulta.json()
 
-    assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert usuario.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
     assert consulta.status_code == HTTPStatus.OK
     assert len(dados) == 1
 
 
-def test_criar_usuario_sem_email(usuario_admin):
-    resposta = usuario_admin.post("/usuarios/", json={
+def test_criar_usuario_sem_email(cliente, usuario_admin):
+    usuario = cliente.post("/usuarios/", json={
         "nome": "teste",
         "senha": "12345678",
         "admin": False
@@ -135,13 +135,13 @@ def test_criar_usuario_sem_email(usuario_admin):
     consulta = usuario_admin.get("/usuarios/")
     dados = consulta.json()
 
-    assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert usuario.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
     assert consulta.status_code == HTTPStatus.OK
     assert len(dados) == 1
 
 
-def test_criar_usuario_sem_senha(usuario_admin):
-    resposta = usuario_admin.post("/usuarios/", json={
+def test_criar_usuario_sem_senha(cliente, usuario_admin):
+    usuario = cliente.post("/usuarios/", json={
         "nome": "teste",
         "email": "teste@gmail.com",
         "admin": False
@@ -150,13 +150,13 @@ def test_criar_usuario_sem_senha(usuario_admin):
     consulta = usuario_admin.get("/usuarios/")
     dados = consulta.json()
 
-    assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert usuario.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
     assert consulta.status_code == HTTPStatus.OK
     assert len(dados) == 1
 
 
-def test_criar_usuario_sem_admin(usuario_admin):
-    resposta = usuario_admin.post("/usuarios/", json={
+def test_criar_usuario_sem_admin(cliente, usuario_admin):
+    usuario = cliente.post("/usuarios/", json={
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678"
@@ -165,13 +165,13 @@ def test_criar_usuario_sem_admin(usuario_admin):
     consulta = usuario_admin.get("/usuarios/")
     dados = consulta.json()
 
-    assert resposta.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert usuario.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
     assert consulta.status_code == HTTPStatus.OK
     assert len(dados) == 1
 
 
-def test_listar_usuarios(usuario_admin):
-    usuario = usuario_admin.post("/usuarios/", json={
+def test_listar_usuarios(cliente, usuario_admin):
+    usuario = cliente.post("/usuarios/", json={
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
