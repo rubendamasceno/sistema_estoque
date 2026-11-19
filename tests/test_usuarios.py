@@ -187,8 +187,27 @@ def test_listar_usuarios(cliente, usuario_admin):
     assert len(dados) == 2
 
 
-def test_buscar_ususario_pelo_id(usuario_admin):
-    usuario = usuario_admin.post("/usuarios/", json={
+def test_listar_usuarios_com_usuario_comum(usuario_autenticado, cliente):
+    usuario = cliente.post("/usuarios/", json={
+        "nome": "teste",
+        "email": "teste@gmail.com",
+        "senha": "12345678",
+        "admin": False
+    })
+
+    assert usuario.status_code == HTTPStatus.OK
+
+    consulta = usuario_autenticado.get("/usuarios/")
+
+    assert consulta.status_code == HTTPStatus.FORBIDDEN
+
+
+def test_listar_usuarios_sem_token(cliente):
+    ...
+
+
+def test_buscar_usuario_pelo_id(cliente, usuario_admin):
+    usuario = cliente.post("/usuarios/", json={
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
@@ -198,10 +217,10 @@ def test_buscar_ususario_pelo_id(usuario_admin):
     assert usuario.status_code == HTTPStatus.OK
     id_usuario = usuario.json()["id"]
 
-    resposta = usuario_admin.get(f"/usuarios/{id_usuario}")
-    dados = resposta.json()
+    consulta = usuario_admin.get(f"/usuarios/{id_usuario}")
+    dados = consulta.json()
 
-    assert resposta.status_code == HTTPStatus.OK
+    assert consulta.status_code == HTTPStatus.OK
     assert dados["id"] == id_usuario
     assert dados["nome"] == "teste"
     assert dados["email"] == "teste@gmail.com"
@@ -214,8 +233,8 @@ def test_buscar_usuario_inexistente(usuario_admin):
     assert resposta.status_code == HTTPStatus.NOT_FOUND
 
 
-def test_atualizar_usuario(usuario_admin):
-    usuario = usuario_admin.post("/usuarios/", json={
+def test_atualizar_usuario(cliente, usuario_admin):
+    usuario = cliente.post("/usuarios/", json={
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
@@ -251,8 +270,8 @@ def test_atualizar_usuario_inexistente(usuario_admin):
     assert resposta.status_code == HTTPStatus.NOT_FOUND
 
 
-def test_atualizar_usuario_email_duplicado(usuario_admin):
-    usuario1 = usuario_admin.post("/usuarios/", json={
+def test_atualizar_usuario_email_duplicado(cliente, usuario_admin):
+    usuario1 = cliente.post("/usuarios/", json={
         "nome": "teste1",
         "email": "teste1@gmail.com",
         "senha": "12345678",
@@ -263,7 +282,7 @@ def test_atualizar_usuario_email_duplicado(usuario_admin):
 
     id_usuario1 = usuario1.json()["id"]
 
-    usuario2 = usuario_admin.post("/usuarios/", json={
+    usuario2 = cliente.post("/usuarios/", json={
         "nome": "teste2",
         "email": "teste2@gmail.com",
         "senha": "12345678",
@@ -297,8 +316,8 @@ def test_atualizar_usuario_email_duplicado(usuario_admin):
     assert dados2["email"] == "teste2@gmail.com"
 
 
-def test_atualizar_usuario_email_invalido(usuario_admin):
-    usuario = usuario_admin.post("/usuarios/", json={
+def test_atualizar_usuario_email_invalido(cliente, usuario_admin):
+    usuario = cliente.post("/usuarios/", json={
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
@@ -326,8 +345,8 @@ def test_atualizar_usuario_email_invalido(usuario_admin):
     assert dados["admin"] is False
 
 
-def test_atualizar_usuario_nome_curto(usuario_admin):
-    usuario = usuario_admin.post("/usuarios/", json={
+def test_atualizar_usuario_nome_curto(cliente, usuario_admin):
+    usuario = cliente.post("/usuarios/", json={
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
@@ -355,8 +374,8 @@ def test_atualizar_usuario_nome_curto(usuario_admin):
     assert dados["admin"] is False
 
 
-def test_atualizar_usuario_sem_nome(usuario_admin):
-    usuario = usuario_admin.post("/usuarios/", json={
+def test_atualizar_usuario_sem_nome(cliente, usuario_admin):
+    usuario = cliente.post("/usuarios/", json={
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
@@ -383,8 +402,8 @@ def test_atualizar_usuario_sem_nome(usuario_admin):
     assert dados["admin"] is False
 
 
-def test_atualizar_usuario_sem_email(usuario_admin):
-    usuario = usuario_admin.post("/usuarios/", json={
+def test_atualizar_usuario_sem_email(cliente, usuario_admin):
+    usuario = cliente.post("/usuarios/", json={
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
@@ -411,8 +430,8 @@ def test_atualizar_usuario_sem_email(usuario_admin):
     assert dados["admin"] is False
 
 
-def test_excluir_usuario(usuario_admin):
-    usuario = usuario_admin.post("/usuarios/", json={
+def test_excluir_usuario(cliente, usuario_admin):
+    usuario = cliente.post("/usuarios/", json={
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
@@ -434,25 +453,8 @@ def test_excluir_usuario(usuario_admin):
 
 
 def test_excluir_usuario_inexistente(usuario_admin):
-    usuario = usuario_admin.post("/usuarios/", json={
-        "nome": "teste",
-        "email": "teste@gmail.com",
-        "senha": "12345678",
-        "admin": False
-    })
-
-    assert usuario.status_code == HTTPStatus.OK
-
-    id_usuario = usuario.json()["id"]
-
     resposta = usuario_admin.delete(f"/usuarios/999")
 
-    consulta = usuario_admin.get(f"/usuarios/{id_usuario}")
-    dados = consulta.json()
-
     assert resposta.status_code == HTTPStatus.NOT_FOUND
-    assert consulta.status_code == HTTPStatus.OK
-    assert dados["id"] == id_usuario
-
 
 

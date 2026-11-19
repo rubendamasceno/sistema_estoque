@@ -72,7 +72,7 @@ def usuario_autenticado(criar_cliente):
 
     usuario = cliente.post("/usuarios/", json={
         "nome": "teste",
-        "email": "teste@gmail.com",
+        "email": "autenticado@gmail.com",
         "senha": "12345678",
         "admin": False
     })
@@ -80,7 +80,7 @@ def usuario_autenticado(criar_cliente):
     assert usuario.status_code == 200
 
     login = cliente.post("/usuarios/login", json={
-    "email": "teste@gmail.com",
+    "email": "autenticado@gmail.com",
     "senha": "12345678"
     })
 
