@@ -203,7 +203,33 @@ def test_listar_usuarios_com_usuario_comum(usuario_autenticado, cliente):
 
 
 def test_listar_usuarios_sem_token(cliente):
-    ...
+    usuario = cliente.post("/usuarios/", json={
+        "nome": "teste",
+        "email": "teste@gmail.com",
+        "senha": "12345678",
+        "admin": False
+    })
+
+    assert usuario.status_code == HTTPStatus.OK
+
+    consulta = cliente.get("/usuarios/")
+
+    assert consulta.status_code == HTTPStatus.UNAUTHORIZED
+
+
+def test_listar_usuarios_com_token_invalido(cliente):
+    usuario = cliente.post("/usuarios/", json={
+        "nome": "teste",
+        "email": "teste@gmail.com",
+        "senha": "12345678",
+        "admin": False
+    })
+
+    assert usuario.status_code == HTTPStatus.OK
+
+    consulta = cliente.get("/usuarios/", headers={"Authorization": "Bearer token_invalido"})
+
+    assert consulta.status_code == HTTPStatus.UNAUTHORIZED
 
 
 def test_buscar_usuario_pelo_id(cliente, usuario_admin):
@@ -231,6 +257,54 @@ def test_buscar_usuario_inexistente(usuario_admin):
     resposta = usuario_admin.get("/usuarios/999")
 
     assert resposta.status_code == HTTPStatus.NOT_FOUND
+
+
+def test_buscar_usuario_por_id_com_usuario_comum(usuario_autenticado, cliente):
+    usuario = cliente.post("/usuarios/", json={
+        "nome": "teste",
+        "email": "teste@gmail.com",
+        "senha": "12345678",
+        "admin": False
+    })
+
+    assert usuario.status_code == HTTPStatus.OK
+    id_usuario = usuario.json()["id"]
+
+    consulta = usuario_autenticado.get(f"/usuarios/{id_usuario}")
+
+    assert consulta.status_code == HTTPStatus.FORBIDDEN
+
+
+def test_buscar_usaurio_por_id_sem_token(cliente):
+    usuario = cliente.post("/usuarios/", json={
+        "nome": "teste",
+        "email": "teste@gmail.com",
+        "senha": "12345678",
+        "admin": False
+    })
+    
+    assert usuario.status_code == HTTPStatus.OK
+    id_usuario = usuario.json()["id"]
+
+    consulta = cliente.get(f"/usuarios/{id_usuario}")
+
+    assert consulta.status_code == HTTPStatus.UNAUTHORIZED
+    
+
+def test_buscar_usuario_com_token_invalido(cliente):
+    usuario = cliente.post("/usuarios/", json={
+        "nome": "teste",
+        "email": "teste@gmail.com",
+        "senha": "12345678",
+        "admin": False
+    })
+        
+    assert usuario.status_code == HTTPStatus.OK
+    id_usuario = usuario.json()["id"]
+
+    consulta = cliente.get(f"/usuarios/{id_usuario}", headers={"Authoritzation": "Bearer token_invalido"})
+
+    assert consulta.status_code == HTTPStatus.UNAUTHORIZED
 
 
 def test_atualizar_usuario(cliente, usuario_admin):
@@ -430,6 +504,82 @@ def test_atualizar_usuario_sem_email(cliente, usuario_admin):
     assert dados["admin"] is False
 
 
+def test_atualizar_usuario_com_usuario_comum(usuario_autenticado, cliente, usuario_admin):
+    usuario = cliente.post("/usuarios/", json={
+            "nome": "teste",
+            "email": "teste@gmail.com",
+            "senha": "12345678",
+            "admin": False
+        })
+    
+    assert usuario.status_code == HTTPStatus.OK
+
+    id_usuario = usuario.json()["id"]
+
+    resposta = usuario_autenticado.put(f"/usuarios/{id_usuario}", json={
+        "nome": "teste",
+        "admin": True
+    })
+
+    assert resposta.status_code == HTTPStatus.FORBIDDEN
+
+    consulta = usuario_admin.get(f"/usuarios/{id_usuario}")
+    dados = consulta.json()
+
+    
+    assert consulta.status_code == HTTPStatus.OK
+    assert dados["id"] == id_usuario
+    assert dados["nome"] == "teste"
+    assert dados["email"] == "teste@gmail.com"
+    assert dados["admin"] is False
+
+
+def test_atualizar_usuario_sem_token(cliente):
+    usuario = cliente.post("/usuarios/", json={
+        "nome": "teste",
+        "email": "teste@gmail.com",
+        "senha": "12345678",
+        "admin": False
+    })
+        
+    assert usuario.status_code == HTTPStatus.OK
+
+    id_usuario = usuario.json()["id"]
+
+    consulta = cliente.get(f"/usuarios/{id_usuario}")
+
+    assert consulta.status_code == HTTPStatus.UNAUTHORIZED
+
+
+def test_atualizar_usuario_com_token_invalido(cliente, usuario_admin):
+    usuario = cliente.post("/usuarios/", json={
+        "nome": "teste",
+        "email": "teste@gmail.com",
+        "senha": "12345678",
+        "admin": False
+    })
+    
+    assert usuario.status_code == HTTPStatus.OK
+
+    id_usuario = usuario.json()["id"]
+
+    resposta = cliente.put(f"/usuarios/{id_usuario}", json={
+        "nome": "teste",
+        "admin": True
+    })
+
+    assert resposta.status_code == HTTPStatus.UNAUTHORIZED
+
+    consulta = usuario_admin.get(f"/usuarios/{id_usuario}")
+    dados = consulta.json()
+
+    assert consulta.status_code == HTTPStatus.OK
+    assert dados["id"] == id_usuario
+    assert dados["nome"] == "teste"
+    assert dados["email"] == "teste@gmail.com"
+    assert dados["admin"] is False
+
+
 def test_excluir_usuario(cliente, usuario_admin):
     usuario = cliente.post("/usuarios/", json={
         "nome": "teste",
@@ -445,11 +595,13 @@ def test_excluir_usuario(cliente, usuario_admin):
     resposta = usuario_admin.delete(f"/usuarios/{id_usuario}")
     dados_resposta = resposta.json()
 
-    consulta = usuario_admin.get(f"/usuarios/{id_usuario}")
-
     assert resposta.status_code == HTTPStatus.OK
-    assert consulta.status_code == HTTPStatus.NOT_FOUND
     assert dados_resposta["id"] == id_usuario
+
+    consulta = usuario_admin.get(f"/usuarios/{id_usuario}")
+   
+    assert consulta.status_code == HTTPStatus.NOT_FOUND
+   
 
 
 def test_excluir_usuario_inexistente(usuario_admin):
@@ -458,3 +610,79 @@ def test_excluir_usuario_inexistente(usuario_admin):
     assert resposta.status_code == HTTPStatus.NOT_FOUND
 
 
+def test_excluir_usuario_com_usuario_comum(usuario_autenticado, cliente, usuario_admin):
+    usuario = cliente.post("/usuarios/", json={
+        "nome": "teste",
+        "email": "teste@gmail.com",
+        "senha": "12345678",
+        "admin": False
+    })
+
+    assert usuario.status_code == HTTPStatus.OK
+
+    id_usuario = usuario.json()["id"]
+
+    resposta = usuario_autenticado.delete(f"/usuarios/{id_usuario}")
+
+    assert resposta.status_code == HTTPStatus.FORBIDDEN
+
+    consulta = usuario_admin.get(f"/usuarios/{id_usuario}")
+    dados = consulta.json()
+
+    assert consulta.status_code == HTTPStatus.OK
+    assert dados["id"] == id_usuario
+    assert dados["nome"] == "teste"
+    assert dados["email"] == "teste@gmail.com"
+    assert dados["admin"] is False
+
+
+def test_excluir_usuario_sem_token(cliente, usuario_admin):
+    usuario = cliente.post("/usuarios/", json={
+        "nome": "teste",
+        "email": "teste@gmail.com",
+        "senha": "12345678",
+        "admin": False
+    })
+
+    assert usuario.status_code == HTTPStatus.OK
+
+    id_usuario = usuario.json()["id"]
+
+    resposta = cliente.delete(f"/usuarios/{id_usuario}")
+
+    assert resposta.status_code == HTTPStatus.UNAUTHORIZED
+
+    consulta = usuario_admin.get(f"/usuarios/{id_usuario}")
+    dados = consulta.json()
+
+    assert consulta.status_code == HTTPStatus.OK
+    assert dados["id"] == id_usuario
+    assert dados["nome"] == "teste"
+    assert dados["email"] == "teste@gmail.com"
+    assert dados["admin"] is False
+
+
+def test_excluir_usuario__invalido(cliente, usuario_admin):
+    usuario = cliente.post("/usuarios/", json={
+        "nome": "teste",
+        "email": "teste@gmail.com",
+        "senha": "12345678",
+        "admin": False
+    })
+
+    assert usuario.status_code == HTTPStatus.OK
+
+    id_usuario = usuario.json()["id"]
+
+    resposta = cliente.delete(f"/usuarios/{id_usuario}", headers={"Authorization": "Bearer token_invalido"})
+
+    assert resposta.status_code == HTTPStatus.UNAUTHORIZED
+
+    consulta = usuario_admin.get(f"/usuarios/{id_usuario}")
+    dados = consulta.json()
+
+    assert consulta.status_code == HTTPStatus.OK
+    assert dados["id"] == id_usuario
+    assert dados["nome"] == "teste"
+    assert dados["email"] == "teste@gmail.com"
+    assert dados["admin"] is False
