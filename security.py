@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 load_dotenv()
 # Carrega as variáveis de ambiente do seu codigo
 
-SECRET_KEY= os.getenv("SECRET_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY")
 # Chave secreta utilizada para assinar e validar os tokens JWT
 
 ALGORITHM = os.getenv("ALGORITHM")
