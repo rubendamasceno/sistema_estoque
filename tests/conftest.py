@@ -75,7 +75,6 @@ def usuario_autenticado(criar_cliente):
         "nome": "teste",
         "email": "autenticado@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     assert usuario.status_code == 200

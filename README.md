@@ -1,205 +1,205 @@
-# Sistema de Estoque
+# Sistema de Estoque — API REST
 
-API REST para gerenciamento de estoque, usuários e pedidos, desenvolvida com **Python, FastAPI e SQLAlchemy**.
-
-O sistema permite cadastrar produtos, gerenciar usuários e registrar pedidos. Ao criar um pedido, a API valida a disponibilidade dos produtos e atualiza automaticamente as quantidades em estoque.
-
-Este é meu primeiro projeto de API, desenvolvido para colocar em prática conceitos de desenvolvimento backend, bancos de dados relacionais, autenticação JWT e regras de negócio.
+API REST desenvolvida com **Python e FastAPI** para gerenciamento de usuários, produtos e pedidos. O projeto utiliza autenticação JWT, controle de acesso por níveis de permissão, banco de dados SQLite e testes automatizados com Pytest.
 
 ## Tecnologias utilizadas
 
-- **Python** — linguagem de programação
-- **FastAPI** — desenvolvimento da API REST
-- **SQLAlchemy** — ORM e comunicação com o banco de dados
-- **SQLite** — banco de dados relacional
-- **Alembic** — controle de migrações do banco
-- **Pydantic** — validação de dados
-- **python-jose** — geração e validação de tokens JWT
-- **Passlib e bcrypt** — hash de senhas
-- **python-dotenv** — gerenciamento de variáveis de ambiente
+- Python
+- FastAPI
+- SQLAlchemy
+- SQLite
+- Alembic
+- Pydantic
+- JWT (python-jose)
+- Passlib e bcrypt
+- python-dotenv
+- Pytest
 
 ## Funcionalidades
 
-### Usuários e autenticação
-
-- Cadastro de usuários e autenticação por e-mail e senha
-- Armazenamento de senhas com hash bcrypt
-- Autenticação JWT com access token e refresh token
-- Controle de permissões entre usuários comuns e administradores
-- Gerenciamento de usuários por administradores
-
 ### Produtos
+- Cadastrar produtos.
+- Listar produtos.
+- Consultar produto por ID.
+- Atualizar produtos.
+- Excluir produtos.
+- Validar preço e quantidade em estoque.
+- Restringir operações de escrita a administradores.
 
-- Cadastro, consulta, atualização e exclusão de produtos
-- Consulta pública de produtos
-- Restrição das operações de escrita a administradores
-- Controle de quantidade disponível em estoque
+### Usuários
+- Cadastrar usuários.
+- Autenticar usuários.
+- Gerar access tokens e refresh tokens.
+- Renovar access tokens.
+- Listar, consultar, atualizar e excluir usuários.
+- Restringir operações administrativas a administradores.
+- Impedir que usuários comuns definam ou alterem o próprio nível de administrador pela API.
 
 ### Pedidos
-
-- Criação de pedidos com múltiplos produtos
-- Associação automática do pedido ao usuário autenticado
-- Consulta de pedidos pelo próprio usuário
-- Listagem geral de pedidos por administradores
-- Atualização automática do estoque após a criação do pedido
-
-## Regras de negócio
-
-A criação de pedidos envolve validações para manter a consistência dos dados:
-
-1. **Identificação do cliente:** o usuário responsável pelo pedido é identificado pelo token de autenticação, não por um ID informado no corpo da requisição.
-2. **Validação dos produtos:** a API verifica se os produtos solicitados existem.
-3. **Verificação de estoque:** o pedido não é concluído quando a quantidade disponível é insuficiente.
-4. **Produtos repetidos:** quando um produto aparece mais de uma vez, suas quantidades são consideradas em conjunto.
-5. **Registro de preços:** o preço de cada item é obtido do produto no momento da criação do pedido.
-6. **Transações:** a criação do pedido, o registro dos itens e a atualização do estoque acontecem em uma única transação, com rollback em caso de falha no banco.
-7. **Controle de acesso:** usuários autenticados podem consultar seus próprios pedidos, enquanto administradores podem listar todos.
+- Criar pedidos para o usuário autenticado.
+- Consultar um pedido específico.
+- Listar todos os pedidos, operação restrita a administradores.
+- Validar disponibilidade de estoque.
+- Registrar os produtos, quantidades e preços dos itens do pedido.
 
 ## Endpoints
 
-### Usuários — `/usuarios`
-
-| Método | Endpoint | Acesso |
-|---|---|---|
-| POST | `/usuarios/` | Público |
-| POST | `/usuarios/login` | Público |
-| POST | `/usuarios/login-form` | Público |
-| POST | `/usuarios/refresh` | Refresh token |
-| GET | `/usuarios/` | Administrador |
-| GET | `/usuarios/{id}` | Administrador |
-| PUT | `/usuarios/{id}` | Administrador |
-| DELETE | `/usuarios/{id}` | Administrador |
+As rotas abaixo estão organizadas conforme a ordem de declaração nos arquivos do projeto.
 
 ### Produtos — `/produtos`
 
-| Método | Endpoint | Acesso |
-|---|---|---|
-| GET | `/produtos/` | Público |
-| GET | `/produtos/{id}` | Público |
-| POST | `/produtos/` | Administrador |
-| PUT | `/produtos/{id}` | Administrador |
-| DELETE | `/produtos/{id}` | Administrador |
+| Método | Endpoint | Descrição | Permissão |
+|---|---|---|---|
+| GET | `/produtos/` | Lista os produtos | Público |
+| POST | `/produtos/` | Cadastra um produto | Administrador |
+| GET | `/produtos/{id}` | Busca um produto pelo ID | Público |
+| DELETE | `/produtos/{id}` | Exclui um produto | Administrador |
+| PUT | `/produtos/{id}` | Atualiza um produto | Administrador |
+
+### Usuários — `/usuarios`
+
+| Método | Endpoint | Descrição | Permissão |
+|---|---|---|---|
+| POST | `/usuarios/login` | Autentica um usuário usando JSON | Público |
+| POST | `/usuarios/login-form` | Autentica usando formulário OAuth2 | Público |
+| GET | `/usuarios/` | Lista os usuários | Administrador |
+| POST | `/usuarios/` | Cadastra um usuário | Público |
+| GET | `/usuarios/{id}` | Busca um usuário pelo ID | Administrador |
+| DELETE | `/usuarios/{id}` | Exclui um usuário | Administrador |
+| PUT | `/usuarios/{id}` | Atualiza um usuário | Administrador |
+| POST | `/usuarios/refresh` | Gera um novo access token | Refresh token |
 
 ### Pedidos — `/pedidos`
 
-| Método | Endpoint | Acesso |
-|---|---|---|
-| POST | `/pedidos/` | Usuário autenticado |
-| GET | `/pedidos/{id}` | Usuário autenticado, proprietário do pedido |
-| GET | `/pedidos/` | Administrador |
+| Método | Endpoint | Descrição | Permissão |
+|---|---|---|---|
+| GET | `/pedidos/` | Lista todos os pedidos | Administrador |
+| POST | `/pedidos/` | Cria um pedido para o usuário autenticado | Usuário autenticado |
+| GET | `/pedidos/{id}` | Consulta um pedido específico | Usuário autenticado, respeitando a propriedade do pedido |
+
+## Autenticação
+
+A API utiliza JWT (JSON Web Token) para autenticar usuários e controlar o acesso aos endpoints protegidos.
+
+O processo funciona da seguinte maneira:
+
+1. O usuário realiza o login informando suas credenciais.
+2. A API verifica o e-mail e a senha.
+3. Se as credenciais forem válidas, são gerados um access token e um refresh token.
+4. O access token é utilizado para acessar endpoints protegidos.
+5. Quando necessário, o refresh token pode ser enviado para `/usuarios/refresh` para obter um novo access token.
+
+O token deve ser enviado no cabeçalho da requisição:
+
+`Authorization: Bearer SEU_TOKEN`
+
+As permissões são verificadas de acordo com o tipo de usuário e o endpoint solicitado.
+
+## Regras de negócio
+
+- O e-mail dos usuários deve ser único.
+- As senhas são armazenadas utilizando hash.
+- Usuários comuns não podem acessar endpoints administrativos.
+- Usuários não podem se promover a administradores por meio do cadastro ou da atualização pública.
+- Produtos não podem possuir preço ou estoque negativo.
+- A quantidade de itens em um pedido deve ser maior ou igual a 1.
+- Um pedido só pode ser criado quando existe estoque suficiente.
+- O preço unitário dos itens é registrado no momento da criação do pedido.
+- Usuários autenticados só podem consultar os próprios pedidos.
 
 ## Como executar o projeto
-
-**Pré-requisitos:** Python e Git instalados.
 
 ### 1. Clonar o repositório
 
 ```bash
-git clone https://github.com/rubendamasceno/sistema_estoque.git
+git clone https://github.com/RubenDamasceno/sistema_estoque.git
+```
+
+### 2. Entrar na pasta do projeto
+
+```bash
 cd sistema_estoque
 ```
 
-### 2. Criar e ativar um ambiente virtual
+### 3. Criar um ambiente virtual
 
 ```bash
 python -m venv .venv
 ```
 
-No Windows (PowerShell):
+Ativar no Windows:
 
 ```powershell
-.\.venv\Scripts\Activate.ps1
+.venv\Scripts\Activate.ps1
 ```
 
-No Linux/macOS:
+### 4. Instalar as dependências
 
 ```bash
-source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-### 3. Instalar as dependências
+### 5. Configurar as variáveis de ambiente
 
-```bash
-python -m pip install -r requirements.txt
-```
+Crie um arquivo `.env` na raiz do projeto:
 
-### 4. Configurar as variáveis de ambiente
-
-Crie um arquivo `.env` na raiz do projeto, utilizando o `.env.example` como referência:
-
-```dotenv
+```env
 SECRET_KEY=sua_chave_secreta
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
 
-Para gerar uma chave secreta aleatória:
+Utilize uma chave secreta própria e mantenha o arquivo `.env` fora do controle de versão.
 
-```bash
-python -c "import secrets; print(secrets.token_hex(32))"
-```
-
-Substitua `sua_chave_secreta` pelo valor gerado.
-
-O arquivo `.env` não deve ser enviado ao GitHub.
-
-### 5. Aplicar as migrações do banco de dados
+### 6. Executar as migrações
 
 ```bash
 alembic upgrade head
 ```
 
-### 6. Iniciar a API
+### 7. Iniciar a API
 
 ```bash
 uvicorn main:app --reload
 ```
 
-A API ficará disponível localmente em:
+A documentação interativa estará disponível em:
 
-`http://127.0.0.1:8000`
+- Swagger: `http://127.0.0.1:8000/docs`
+- ReDoc: `http://127.0.0.1:8000/redoc`
 
-Documentação interativa (Swagger UI):
+## Administrador
 
-`http://127.0.0.1:8000/docs`
+O cadastro público cria usuários comuns. Para configurar um administrador no ambiente local, é necessário alterar o campo `admin` diretamente no banco SQLite.
 
-## Exemplo de requisição
+Exemplo:
 
-Para criar um pedido, envie uma requisição autenticada para `POST /pedidos/` com um corpo semelhante a:
-
-```json
-{
-  "itens": [
-    {
-      "id_produto": 1,
-      "quantidade": 2
-    },
-    {
-      "id_produto": 3,
-      "quantidade": 1
-    }
-  ]
-}
+```sql
+UPDATE usuarios
+SET admin = 1
+WHERE email = 'seu-email@email.com';
 ```
 
-Os produtos precisam existir no banco e possuir estoque suficiente.
+Substitua o e-mail pelo cadastro desejado. Essa alteração deve ser feita diretamente no banco, não por uma rota pública da API.
 
-## Testando a API pelo Swagger
+## Testes
 
-1. Cadastre um usuário usando `POST /usuarios/`.
-2. Faça login pelo botão **Authorize**, informando o e-mail no campo `username` e a senha.
-3. Utilize o token de acesso para testar os endpoints protegidos.
-4. Para testar as operações administrativas, utilize um usuário com a permissão `admin`. Cadastre o usuário com `"admin": true` no corpo de `POST /usuarios/`
+O projeto utiliza Pytest para executar testes automatizados das rotas, validações, autenticação e permissões.
 
-## Observações e limitações
+Executar os testes:
 
-Este projeto foi desenvolvido com foco no aprendizado e na execução em ambiente local.
+```bash
+python -m pytest -v
+```
 
-- **Cadastro de administradores:** para facilitar os testes em ambiente local, o endpoint público de cadastro permite definir o campo `admin: true`. Essa decisão foi intencional e limitada ao contexto educacional do projeto. Em um ambiente de produção, a atribuição de permissões administrativas exigiria um mecanismo de autorização adequado, impedindo que usuários comuns elevassem seus próprios privilégios.
-- **Banco de dados:** o projeto utiliza SQLite para persistência local.
-- **Testes:** suíte de testes automatizados (pytest) está em desenvolvimento. No momento cobre a criação de pedidos; as demais funcionalidades foram verificadas manualmente pelo Swagger.
-- **Deploy:** a API ainda não está hospedada em um servidor público.
+Executar os testes com relatório de cobertura:
+
+```bash
+python -m pytest --cov --cov-report=term-missing
+```
 
 ## Autor
 
-Ruben Damasceno
+**Ruben Damasceno**
+
+GitHub: [github.com/RubenDamasceno](https://github.com/RubenDamasceno)
