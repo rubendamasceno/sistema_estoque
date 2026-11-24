@@ -196,7 +196,6 @@ def test_buscar_pedido_de_outro_usuario(usuario_autenticado, usuario_admin, cria
         "nome": "teste2", 
         "email": "teste2@gmail.com",
         "senha": "123456789",
-        "admin": False 
     })
 
     assert usuario2.status_code == HTTPStatus.OK

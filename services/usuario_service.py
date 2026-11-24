@@ -26,7 +26,7 @@ def criar_usuario(usuario_schema:UsuarioCreate, session):
         return False
     
     senha_criptografada = gerar_hash(usuario_schema.senha)
-    usuario = Usuario(usuario_schema.nome, usuario_schema.email, senha_criptografada, admin=usuario_schema.admin)
+    usuario = Usuario(usuario_schema.nome, usuario_schema.email, senha_criptografada)
     
     try:
         session.add(usuario)
@@ -68,7 +68,6 @@ def atualizar_usuario(id, usuario_schema, session):
     try:
         usuario.nome = usuario_schema.nome
         usuario.email = usuario_schema.email
-        usuario.admin = usuario_schema.admin
         session.commit()
         
     except SQLAlchemyError:

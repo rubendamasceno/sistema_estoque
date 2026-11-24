@@ -20,7 +20,6 @@ def test_verificar_token_expirado(usuario_autenticado):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False 
     })
 
     assert usuario.status_code == HTTPStatus.OK
@@ -79,7 +78,6 @@ def test_verificar_refresh_token_como_access_token(usuario_autenticado):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
     assert usuario.status_code == HTTPStatus.OK
     id_usuario = usuario.json()["id"]
@@ -100,7 +98,6 @@ def test_refresh_token_valido(usuario_autenticado):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
     assert usuario.status_code == HTTPStatus.OK
 
@@ -130,8 +127,7 @@ def test_virificar_refresh_token_expirado(usuario_autenticado):
     usuario = usuario_autenticado.post("/usuarios/", json={
         "nome": "teste",
         "email": "teste@gmail.com",
-        "senha": "12345678",
-        "admin": False        
+        "senha": "12345678",      
     })
 
     assert usuario.status_code == HTTPStatus.OK
@@ -153,8 +149,7 @@ def test_utilizar_access_token_como_refresh_token(usuario_autenticado):
     usuario = usuario_autenticado.post("/usuarios/", json={
         "nome": "teste",
         "email": "teste@gmail.com",
-        "senha": "12345678",
-        "admin": False          
+        "senha": "12345678",         
     })
     assert usuario.status_code == HTTPStatus.OK
 

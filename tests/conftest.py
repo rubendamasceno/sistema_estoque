@@ -6,6 +6,7 @@ from sqlalchemy.pool import StaticPool
 
 from main import app
 from dependencies import pegar_sessao
+from security import gerar_hash
 from db import Base
 from models import Usuario, Produto, Pedido, ItemPedido
 
@@ -31,6 +32,7 @@ def session_teste():
         session.close()
         Base.metadata.drop_all(bind=engine) # Limpeza das tabelas no banco
         engine.dispose() # Libera os recursos de engine  
+
 
 @pytest.fixture
 def app_test(session_teste):
@@ -65,7 +67,6 @@ def criar_cliente(app_test):
         cliente.close()
 
 
-
 @pytest.fixture
 def usuario_autenticado(criar_cliente):
     cliente = criar_cliente()
@@ -95,17 +96,18 @@ def usuario_autenticado(criar_cliente):
 
 
 @pytest.fixture
-def usuario_admin(criar_cliente):
+def usuario_admin(criar_cliente, session_teste):
     cliente = criar_cliente()
 
-    usuario = cliente.post("/usuarios/", json={
-        "nome": "Adm",
-        "email": "adm@gmail.com",
-        "senha": "12345678",
-        "admin": True
-    })
+    usuario = Usuario(
+        "Adm",
+        "adm@gmail.com",
+        gerar_hash("12345678"),
+        admin=True
+    )
 
-    assert usuario.status_code == 200
+    session_teste.add(usuario)
+    session_teste.commit()
 
     login = cliente.post("/usuarios/login", json={
         "email": "adm@gmail.com",
@@ -113,7 +115,7 @@ def usuario_admin(criar_cliente):
     })
 
     assert login.status_code == 200
-    
+
     access_token = login.json()["access_token"]
     cliente.headers.update({
         "Authorization": f"Bearer {access_token}"

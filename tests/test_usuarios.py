@@ -6,7 +6,6 @@ def test_login(cliente):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     assert usuario.status_code == HTTPStatus.OK
@@ -30,7 +29,6 @@ def test_login_com_senha_incorreta(cliente):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     assert usuario.status_code == HTTPStatus.OK
@@ -49,7 +47,6 @@ def test_login_com_email_inexistente(cliente):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     assert usuario.status_code == HTTPStatus.OK
@@ -68,7 +65,6 @@ def test_login_form(cliente):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     assert usuario.status_code == HTTPStatus.OK
@@ -92,7 +88,6 @@ def test_login_form_com_senha_incorreta(cliente):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     assert usuario.status_code == HTTPStatus.OK
@@ -110,7 +105,6 @@ def test_login_form_com_email_inexistente(cliente):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     assert usuario.status_code == HTTPStatus.OK
@@ -129,7 +123,6 @@ def test_criar_usuario(cliente):
         "nome": "teste", 
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     dados = usuario.json()
@@ -151,17 +144,13 @@ def test_criar_usuario_admin(cliente):
     dados = usuario.json()
 
     assert usuario.status_code == HTTPStatus.OK
-    assert dados["nome"] == "adm"
-    assert dados["email"] == "adm@gmail.com"
-    assert "id" in dados
-
+    assert dados["admin"] is False 
 
 def test_criar_usuario_email_duplicado(cliente, usuario_admin):
     usuario = cliente.post("/usuarios/", json={ 
     "nome": "teste",
     "email": "teste@gmail.com",
     "senha": "12345678",
-    "admin": False
     })
 
     assert usuario.status_code == HTTPStatus.OK
@@ -172,7 +161,6 @@ def test_criar_usuario_email_duplicado(cliente, usuario_admin):
         "nome": "teste2",
         "email": "teste@gmail.com",
         "senha": "123456789",
-        "admin": False
     })
 
     consulta = usuario_admin.get(f"/usuarios/{id_usuario}")
@@ -191,7 +179,6 @@ def test_criar_usuario_email_invalido(cliente, usuario_admin):
         "nome": "teste",
         "email": "teste@example",
         "senha": "12345678",
-        "admin": False
     })
 
     consulta = usuario_admin.get("/usuarios/")
@@ -207,7 +194,6 @@ def test_criar_usuario_senha_curta(cliente, usuario_admin):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "123456",
-        "admin": False
     })
 
     consulta = usuario_admin.get("/usuarios/")
@@ -223,7 +209,6 @@ def test_criar_usuario_nome_curto(cliente, usuario_admin):
         "nome": "te",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     consulta = usuario_admin.get("/usuarios/")
@@ -238,7 +223,6 @@ def test_criar_usuario_sem_nome(cliente, usuario_admin):
     usuario = cliente.post("/usuarios/", json={
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     consulta = usuario_admin.get("/usuarios/")
@@ -253,7 +237,6 @@ def test_criar_usuario_sem_email(cliente, usuario_admin):
     usuario = cliente.post("/usuarios/", json={
         "nome": "teste",
         "senha": "12345678",
-        "admin": False
     })
 
     consulta = usuario_admin.get("/usuarios/")
@@ -268,22 +251,6 @@ def test_criar_usuario_sem_senha(cliente, usuario_admin):
     usuario = cliente.post("/usuarios/", json={
         "nome": "teste",
         "email": "teste@gmail.com",
-        "admin": False
-    })
-
-    consulta = usuario_admin.get("/usuarios/")
-    dados = consulta.json()
-
-    assert usuario.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert consulta.status_code == HTTPStatus.OK
-    assert len(dados) == 1
-
-
-def test_criar_usuario_sem_admin(cliente, usuario_admin):
-    usuario = cliente.post("/usuarios/", json={
-        "nome": "teste",
-        "email": "teste@gmail.com",
-        "senha": "12345678"
     })
 
     consulta = usuario_admin.get("/usuarios/")
@@ -299,7 +266,6 @@ def test_listar_usuarios(cliente, usuario_admin):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     assert usuario.status_code == HTTPStatus.OK
@@ -316,7 +282,6 @@ def test_listar_usuarios_com_usuario_comum(usuario_autenticado, cliente):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     assert usuario.status_code == HTTPStatus.OK
@@ -331,7 +296,6 @@ def test_listar_usuarios_sem_token(cliente):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     assert usuario.status_code == HTTPStatus.OK
@@ -346,7 +310,6 @@ def test_listar_usuarios_com_token_invalido(cliente):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     assert usuario.status_code == HTTPStatus.OK
@@ -361,7 +324,6 @@ def test_buscar_usuario_pelo_id(cliente, usuario_admin):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     assert usuario.status_code == HTTPStatus.OK
@@ -389,7 +351,6 @@ def test_buscar_usuario_por_id_com_usuario_comum(usuario_autenticado, cliente):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     assert usuario.status_code == HTTPStatus.OK
@@ -405,7 +366,6 @@ def test_buscar_usaurio_por_id_sem_token(cliente):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
     
     assert usuario.status_code == HTTPStatus.OK
@@ -421,7 +381,6 @@ def test_buscar_usuario_com_token_invalido(cliente):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
         
     assert usuario.status_code == HTTPStatus.OK
@@ -437,7 +396,6 @@ def test_atualizar_usuario(cliente, usuario_admin):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": True
     })
 
     assert usuario.status_code == HTTPStatus.OK
@@ -447,7 +405,6 @@ def test_atualizar_usuario(cliente, usuario_admin):
     resposta = usuario_admin.put(f"/usuarios/{id_usuario}", json={
         "nome": "teste atualizado",
         "email": "teste.atualizado@gmail.com",
-        "admin": False
     })
 
     dados = resposta.json()
@@ -456,14 +413,12 @@ def test_atualizar_usuario(cliente, usuario_admin):
     assert dados["id"] == id_usuario
     assert dados["nome"] == "teste atualizado"
     assert dados["email"] == "teste.atualizado@gmail.com"
-    assert dados["admin"] is False
 
 
 def test_atualizar_usuario_inexistente(usuario_admin):
     resposta = usuario_admin.put("/usuarios/999", json={
         "nome": "teste",
         "email": "teste@gmail.com",
-        "admin": False
     })
 
     assert resposta.status_code == HTTPStatus.NOT_FOUND
@@ -475,7 +430,6 @@ def test_atualizar_usuario_email_duplicado(cliente, usuario_admin):
         "nome": "teste1",
         "email": "teste1@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     assert usuario1.status_code == HTTPStatus.OK
@@ -486,7 +440,6 @@ def test_atualizar_usuario_email_duplicado(cliente, usuario_admin):
         "nome": "teste2",
         "email": "teste2@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     assert usuario2.status_code == HTTPStatus.OK
@@ -496,7 +449,6 @@ def test_atualizar_usuario_email_duplicado(cliente, usuario_admin):
     resposta = usuario_admin.put(f"/usuarios/{id_usuario1}", json={
         "nome": "teste123",
         "email": "teste2@gmail.com",
-        "admin": True
     })
 
     consulta1 = usuario_admin.get(f"/usuarios/{id_usuario1}")
@@ -522,7 +474,6 @@ def test_atualizar_usuario_email_invalido(cliente, usuario_admin):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     assert usuario.status_code == HTTPStatus.OK
@@ -532,7 +483,6 @@ def test_atualizar_usuario_email_invalido(cliente, usuario_admin):
     resposta = usuario_admin.put(f"/usuarios/{id_usuario}", json={
         "nome": "teste",
         "email": "teste@example",
-        "admin": True
     })
 
     consulta = usuario_admin.get(f"/usuarios/{id_usuario}")
@@ -551,7 +501,6 @@ def test_atualizar_usuario_nome_curto(cliente, usuario_admin):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     assert usuario.status_code == HTTPStatus.OK
@@ -561,7 +510,6 @@ def test_atualizar_usuario_nome_curto(cliente, usuario_admin):
     resposta = usuario_admin.put(f"/usuarios/{id_usuario}", json={
         "nome": "te",
         "email": "teste@gmail.com",
-        "admin": True
     })
 
     consulta = usuario_admin.get(f"/usuarios/{id_usuario}")
@@ -580,7 +528,6 @@ def test_atualizar_usuario_sem_nome(cliente, usuario_admin):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     assert usuario.status_code == HTTPStatus.OK
@@ -589,7 +536,6 @@ def test_atualizar_usuario_sem_nome(cliente, usuario_admin):
 
     resposta = usuario_admin.put(f"/usuarios/{id_usuario}", json={
         "email": "teste@gmail.com",
-        "admin": True
     })
 
     consulta = usuario_admin.get(f"/usuarios/{id_usuario}")
@@ -608,7 +554,6 @@ def test_atualizar_usuario_sem_email(cliente, usuario_admin):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     assert usuario.status_code == HTTPStatus.OK
@@ -617,7 +562,6 @@ def test_atualizar_usuario_sem_email(cliente, usuario_admin):
 
     resposta = usuario_admin.put(f"/usuarios/{id_usuario}", json={
         "nome": "teste",
-        "admin": True
     })
 
     consulta = usuario_admin.get(f"/usuarios/{id_usuario}")
@@ -645,7 +589,6 @@ def test_atualizar_usuario_com_usuario_comum(usuario_autenticado, cliente, usuar
 
     resposta = usuario_autenticado.put(f"/usuarios/{id_usuario}", json={
         "nome": "teste",
-        "admin": True
     })
 
     assert resposta.status_code == HTTPStatus.FORBIDDEN
@@ -666,7 +609,6 @@ def test_atualizar_usuario_sem_token(cliente):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
         
     assert usuario.status_code == HTTPStatus.OK
@@ -676,7 +618,6 @@ def test_atualizar_usuario_sem_token(cliente):
     consulta = cliente.put(f"/usuarios/{id_usuario}", json={
         "nome": "teste123",
         "email": "email123@gmail.com",
-        "admin": True
     })
 
     assert consulta.status_code == HTTPStatus.UNAUTHORIZED
@@ -687,7 +628,6 @@ def test_atualizar_usuario_com_token_invalido(cliente, usuario_admin):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
     
     assert usuario.status_code == HTTPStatus.OK
@@ -696,7 +636,6 @@ def test_atualizar_usuario_com_token_invalido(cliente, usuario_admin):
 
     resposta = cliente.put(f"/usuarios/{id_usuario}", json={
         "nome": "teste",
-        "admin": True
     }, headers={"Authorization": "Bearer token_invalido"})
 
     assert resposta.status_code == HTTPStatus.UNAUTHORIZED
@@ -716,7 +655,6 @@ def test_excluir_usuario(cliente, usuario_admin):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     assert usuario.status_code == HTTPStatus.OK
@@ -747,7 +685,6 @@ def test_excluir_usuario_com_usuario_comum(usuario_autenticado, cliente, usuario
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     assert usuario.status_code == HTTPStatus.OK
@@ -773,7 +710,6 @@ def test_excluir_usuario_sem_token(cliente, usuario_admin):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     assert usuario.status_code == HTTPStatus.OK
@@ -799,7 +735,6 @@ def test_excluir_usuario_invalido(cliente, usuario_admin):
         "nome": "teste",
         "email": "teste@gmail.com",
         "senha": "12345678",
-        "admin": False
     })
 
     assert usuario.status_code == HTTPStatus.OK
