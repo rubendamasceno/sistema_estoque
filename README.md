@@ -1,6 +1,6 @@
 # Sistema de Estoque — API REST
 
-API REST desenvolvida com **Python e FastAPI** para gerenciamento de usuários, produtos e pedidos. O projeto utiliza autenticação JWT, controle de acesso por níveis de permissão, banco de dados SQLite e testes automatizados com Pytest.
+API REST desenvolvida com Python e FastAPI para gerenciamento de usuários, produtos e pedidos. O projeto utiliza autenticação JWT, controle de acesso por níveis de permissão, banco de dados SQLite e testes automatizados com Pytest.
 
 ## Tecnologias utilizadas
 
@@ -18,6 +18,7 @@ API REST desenvolvida com **Python e FastAPI** para gerenciamento de usuários, 
 ## Funcionalidades
 
 ### Produtos
+
 - Cadastrar produtos.
 - Listar produtos.
 - Consultar produto por ID.
@@ -27,6 +28,7 @@ API REST desenvolvida com **Python e FastAPI** para gerenciamento de usuários, 
 - Restringir operações de escrita a administradores.
 
 ### Usuários
+
 - Cadastrar usuários.
 - Autenticar usuários.
 - Gerar access tokens e refresh tokens.
@@ -36,6 +38,7 @@ API REST desenvolvida com **Python e FastAPI** para gerenciamento de usuários, 
 - Impedir que usuários comuns definam ou alterem o próprio nível de administrador pela API.
 
 ### Pedidos
+
 - Criar pedidos para o usuário autenticado.
 - Consultar um pedido específico.
 - Listar todos os pedidos, operação restrita a administradores.
@@ -43,8 +46,6 @@ API REST desenvolvida com **Python e FastAPI** para gerenciamento de usuários, 
 - Registrar os produtos, quantidades e preços dos itens do pedido.
 
 ## Endpoints
-
-As rotas abaixo estão organizadas conforme a ordem de declaração nos arquivos do projeto.
 
 ### Produtos — `/produtos`
 
@@ -91,7 +92,9 @@ O processo funciona da seguinte maneira:
 
 O token deve ser enviado no cabeçalho da requisição:
 
-`Authorization: Bearer SEU_TOKEN`
+```text
+Authorization: Bearer SEU_TOKEN
+```
 
 As permissões são verificadas de acordo com o tipo de usuário e o endpoint solicitado.
 
@@ -109,39 +112,71 @@ As permissões são verificadas de acordo com o tipo de usuário e o endpoint so
 
 ## Como executar o projeto
 
+### Pré-requisitos
+
+Antes de começar, é necessário ter instalado:
+
+- Git
+- Python 3.14
+- Windows com PowerShell (os comandos abaixo foram preparados para esse ambiente)
+
+Para verificar se o Python está instalado:
+
+```powershell
+py -3.14 --version
+```
+
 ### 1. Clonar o repositório
 
-```bash
-git clone https://github.com/RubenDamasceno/sistema_estoque.git
+```powershell
+git clone https://github.com/rubendamasceno/sistema_estoque.git
 ```
 
 ### 2. Entrar na pasta do projeto
 
-```bash
+```powershell
 cd sistema_estoque
 ```
 
 ### 3. Criar um ambiente virtual
 
-```bash
-python -m venv .venv
+```powershell
+py -3.14 -m venv .venv
 ```
 
-Ativar no Windows:
+### 4. Ativar o ambiente virtual
+
+No Windows PowerShell:
 
 ```powershell
-.venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1
 ```
 
-### 4. Instalar as dependências
+Caso o PowerShell bloqueie a execução do script, permita a execução somente na sessão atual do terminal:
 
-```bash
-pip install -r requirements.txt
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
 ```
 
-### 5. Configurar as variáveis de ambiente
+Em seguida, execute novamente o comando de ativação do ambiente virtual.
 
-Crie um arquivo `.env` na raiz do projeto:
+### 5. Instalar as dependências
+
+Com o ambiente virtual ativado:
+
+```powershell
+python -m pip install -r requirements.txt
+```
+
+### 6. Configurar as variáveis de ambiente
+
+Copie o arquivo de exemplo para criar seu arquivo local:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Abra o arquivo `.env` e configure as variáveis:
 
 ```env
 SECRET_KEY=sua_chave_secreta
@@ -149,38 +184,46 @@ ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
 
-Utilize uma chave secreta própria e mantenha o arquivo `.env` fora do controle de versão.
+- `SECRET_KEY`: chave secreta utilizada para assinar e validar os tokens JWT. Gere uma chave própria e forte.
+- `ALGORITHM`: algoritmo utilizado na assinatura dos tokens. O valor utilizado pelo projeto é `HS256`.
+- `ACCESS_TOKEN_EXPIRE_MINUTES`: tempo de validade do access token em minutos. O exemplo utiliza `30`.
 
-### 6. Executar as migrações
+Não compartilhe sua chave secreta e não envie o arquivo `.env` para o Git. O arquivo `.env.example` serve apenas como modelo, sem conter sua chave privada.
 
-```bash
-alembic upgrade head
+### 7. Executar as migrações do banco de dados
+
+```powershell
+python -m alembic upgrade head
 ```
 
-### 7. Iniciar a API
+O projeto utiliza SQLite. As migrações do Alembic criam e atualizam a estrutura do banco de dados local.
 
-```bash
-uvicorn main:app --reload
+### 8. Iniciar a API
+
+```powershell
+python -m uvicorn main:app --reload
 ```
 
 A documentação interativa estará disponível em:
 
-- Swagger: `http://127.0.0.1:8000/docs`
-- ReDoc: `http://127.0.0.1:8000/redoc`
+- Swagger: http://127.0.0.1:8000/docs
+- ReDoc: http://127.0.0.1:8000/redoc
 
 ## Administrador
 
-O cadastro público cria usuários comuns. Para configurar um administrador no ambiente local, é necessário alterar o campo `admin` diretamente no banco SQLite.
+O cadastro público cria usuários comuns. Por segurança, não é permitido que uma pessoa escolha ou altere o próprio nível de administrador pelas rotas públicas da API.
 
-Exemplo:
+Para realizar testes locais com uma conta administradora, primeiro crie um usuário normalmente pela API. Depois, com a API parada, execute no PowerShell, na pasta raiz do projeto e com o ambiente virtual ativado, o comando abaixo. Substitua o e-mail pelo endereço da conta que deseja promover:
 
-```sql
-UPDATE usuarios
-SET admin = 1
-WHERE email = 'seu-email@email.com';
+```powershell
+python -c "import sqlite3; c=sqlite3.connect('db.sqlite'); cur=c.execute('UPDATE usuarios SET admin = 1 WHERE email = ?', ('seu-email@email.com',)); c.commit(); print('Usuarios atualizados:', cur.rowcount); c.close()"
 ```
 
-Substitua o e-mail pelo cadastro desejado. Essa alteração deve ser feita diretamente no banco, não por uma rota pública da API.
+Se o resultado for `Usuarios atualizados: 1`, a conta foi promovida a administradora no banco local. Se retornar `0`, confira se o e-mail informado corresponde a um usuário cadastrado.
+
+Depois, inicie a API novamente, faça login com essa conta e utilize o token para testar os endpoints administrativos.
+
+**Atenção:** essa alteração é destinada apenas ao ambiente local de desenvolvimento e testes. Não conceda privilégios administrativos a usuários sem autorização em um ambiente real.
 
 ## Testes
 
@@ -188,18 +231,18 @@ O projeto utiliza Pytest para executar testes automatizados das rotas, validaç�
 
 Executar os testes:
 
-```bash
+```powershell
 python -m pytest -v
 ```
 
 Executar os testes com relatório de cobertura:
 
-```bash
+```powershell
 python -m pytest --cov --cov-report=term-missing
 ```
 
 ## Autor
 
-**Ruben Damasceno**
+Ruben Damasceno
 
-GitHub: [github.com/RubenDamasceno](https://github.com/RubenDamasceno)
+GitHub: https://github.com/RubenDamasceno
