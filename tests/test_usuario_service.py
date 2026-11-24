@@ -1,6 +1,7 @@
-
+import pytest
+from unittest.mock import Mock
+from sqlalchemy.exc import SQLAlchemyError
 from services.usuario_service import obter_usuario, autenticar_usuario, listar_usuarios, criar_usuario, excluir_usuario, atualizar_usuario
-
 from schemas import UsuarioCreate, UsuarioUpdate
 from models import Usuario
 
@@ -105,6 +106,25 @@ def test_criar_usuario_email_existente(session_teste):
     assert session_teste.query(Usuario).count() == 1
 
 
+def test_criar_usuario_erro_rollback():
+    session = Mock()
+
+    session.query.return_value.filter.return_value.first.return_value = None
+
+    session.commit.side_effect = SQLAlchemyError()
+
+    usuario_schema = UsuarioCreate(
+        nome="Teste",
+        email="teste@gmail.com",
+        senha="12345678"
+    )
+
+    with pytest.raises(SQLAlchemyError):
+        criar_usuario(usuario_schema, session)
+
+    session.rollback.assert_called_once()
+
+
 def test_excluir_usuario(session_teste):
     usuario = Usuario(
         nome="teste",
@@ -152,6 +172,19 @@ def test_atualizar_usuario(session_teste):
     assert usuario_atualizado.email == "teste.novo@gmail.com"
 
 
+def test_excluir_usuario_erro_rollback():
+    session = Mock()
+
+    session.commit.side_effect = SQLAlchemyError()
+
+    session.query.return_value.filter.return_value.first.return_value = Mock()
+
+    with pytest.raises(SQLAlchemyError):
+        excluir_usuario(1, session)
+
+    session.rollback.assert_called_once()
+
+
 def test_atualizar_usuario_inexistente(session_teste):
     usuario_schema = UsuarioUpdate(
         nome="Teste",
@@ -195,3 +228,22 @@ def test_atualizar_usuario_email_existente(session_teste):
     usuario_banco = session_teste.query(Usuario).filter(Usuario.id == usuario1.id).first()
 
     assert usuario_banco.email == "teste1@gmail.com"
+
+
+def test_atualizar_usuario_erro_rollback():
+    session = Mock()
+
+    session.commit.side_effect = SQLAlchemyError()
+
+    session.query.return_value.filter.return_value.first.side_effect = [Mock(), None]
+
+    usuario_schema = UsuarioUpdate(
+        nome="teste",
+        email="teste@gmail.com",
+        senha="12345678"
+    )
+
+    with pytest.raises(SQLAlchemyError):
+        atualizar_usuario(1, usuario_schema, session)
+
+    session.rollback.assert_called_once()
