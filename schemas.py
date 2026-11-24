@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, ConfigDict
 from datetime import datetime
 
 class ProdutoCreate(BaseModel):
@@ -13,9 +13,7 @@ class ProdutoResponse(BaseModel):
     preco: float
     estoque: int
 
-    class Config:
-        from_attributes=True
-
+    model_config = ConfigDict(from_attributes=True)
 
 class ProdutoUpdate(BaseModel):
     nome: str
@@ -40,8 +38,7 @@ class UsuarioResponse(BaseModel):
     ativo: bool
     admin: bool
 
-    class Config:
-        from_attributes=True
+    model_config = ConfigDict(from_attributes=True)
 
 class UsuarioUpdate(BaseModel):
     nome: str = Field(min_length=3)
@@ -62,8 +59,7 @@ class ItemPedidoResponse(BaseModel):
     quantidade: int
     preco_unitario: float
 
-    class Config:
-        from_attributes=True
+    model_config = ConfigDict(from_attributes=True)
 
 class PedidoResponse(BaseModel):
     id: int
@@ -71,5 +67,4 @@ class PedidoResponse(BaseModel):
     data_pedido: datetime
     itens: list[ItemPedidoResponse]
 
-    class Config:
-        from_attributes=True
+    model_config = ConfigDict(from_attributes=True)
